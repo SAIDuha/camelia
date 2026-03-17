@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify, render_template, session, send_from_directory
 
 from db import get_db, q, q1, ex, PH, init_db, seed_demo
+from stripe_routes import stripe_bp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -19,6 +20,23 @@ PLAN_LIMITS = {
 
 init_db()
 seed_demo()
+
+# Register Stripe routes
+app.register_blueprint(stripe_bp)
+
+# Run Stripe migration (adds columns if not exist)
+def run_stripe_migration():
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            cur.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)")
+            cur.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)")
+            conn.commit()
+    except Exception as e:
+        print(f"[Stripe migration] {e}")
+
+if os.environ.get('DATABASE_URL'):
+    run_stripe_migration()
 
 # ═══════════════════════════════════════════
 # AUTH DECORATORS
