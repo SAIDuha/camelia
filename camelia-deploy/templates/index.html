@@ -513,6 +513,7 @@ async function render() {
       if (adminPage === "dashboard") await renderAdminDashboard(el);
       else if (adminPage === "employees") await renderAdminEmployees(el);
       else if (adminPage === "employee-detail") await renderAdminDetail(el);
+      else if (adminPage === "billing") await renderAdminBilling(el);
     } else {
       await renderEmployee(el);
     }
@@ -530,6 +531,7 @@ function adminNav() {
   return `<div class="nav-tabs">
     <button class="nav-tab ${adminPage==="dashboard"?"active":""}" onclick="setAdminPage('dashboard')">Tableau de bord</button>
     <button class="nav-tab ${adminPage==="employees"?"active":""}" onclick="setAdminPage('employees')">Employés</button>
+    <button class="nav-tab ${adminPage==="billing"?"active":""}" onclick="setAdminPage('billing')">Abonnement</button>
   </div>`;
 }
 
@@ -814,6 +816,88 @@ async function renderAdminDetail(el) {
     </div>
     <div class="card"><h4>7 derniers jours</h4>${barsHTML(stats.weekChart||[])}</div>
     ${historyTable(badges, true)}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// BILLING PAGE
+// ═══════════════════════════════════════════
+async function renderAdminBilling(el) {
+  let planData;
+  try { planData = await api("/api/plan"); }
+  catch(e) { planData = {plan:"starter",limits:{max_employees:10},usage:{employees:1},companySlug:''}; }
+
+  const planNames = {starter:"Starter",pro:"Pro",enterprise:"Enterprise"};
+  const planPrices = {starter:"19€",pro:"49€",enterprise:"Sur mesure"};
+  const current = planData.plan || 'starter';
+  const usage = planData.usage?.employees || 0;
+  const maxEmp = planData.limits?.max_employees || 10;
+  const usagePercent = Math.min(100, Math.round((usage / maxEmp) * 100));
+  const barColor = usagePercent > 80 ? 'var(--danger)' : usagePercent > 50 ? 'var(--warning)' : 'var(--success)';
+
+  const check = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>';
+
+  function planCard(id,name,price,suffix,feats,isCurr,pop) {
+    return `<div class="card" style="padding:24px;${pop?'border-color:var(--primary);box-shadow:0 4px 20px var(--primary-light)':''}${isCurr?';border-color:var(--success)':''}">
+      ${pop?'<div style="font-size:10px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Populaire</div>':''}
+      ${isCurr?'<div style="font-size:10px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Plan actuel</div>':''}
+      <div style="font-size:13px;font-weight:600;color:var(--muted)">${name}</div>
+      <div style="font-family:var(--font-display);font-size:28px;font-weight:700;margin:4px 0">${price} <span style="font-size:13px;font-weight:400;color:var(--muted)">${suffix}</span></div>
+      <div style="height:1px;background:var(--border);margin:14px 0"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${feats.map(f => '<div style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted)">' + check + ' ' + f + '</div>').join('')}
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = `<div class="fade-up">
+    ${adminNav()}
+    <h2 class="page-title" style="margin-bottom:24px">Abonnement</h2>
+
+    <div class="card" style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+        <div>
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Plan actuel</div>
+          <div style="font-size:32px;font-weight:700;font-family:var(--font-display)">${planNames[current]}</div>
+          <div style="font-size:15px;color:var(--muted);margin-top:4px">${planPrices[current]} / mois</div>
+        </div>
+        <div style="min-width:200px">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Employés</div>
+          <div style="font-size:22px;font-weight:700;font-family:var(--font-display)">${usage} <span style="font-size:14px;font-weight:400;color:var(--muted)">/ ${maxEmp}</span></div>
+          <div style="height:6px;background:var(--border);border-radius:3px;margin-top:8px;overflow:hidden">
+            <div style="height:100%;width:${usagePercent}%;background:${barColor};border-radius:3px;transition:width .4s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px">
+      ${planCard('starter','Starter','19€','/ mois',['10 employés max','1 administrateur','Badgeage photo','Historique 30 jours','Support email'],current==='starter')}
+      ${planCard('pro','Pro','49€','/ mois',['100 employés max','5 administrateurs','Historique illimité','Export Excel & PDF','Analytics avancés','Support prioritaire'],current==='pro',true)}
+      ${planCard('enterprise','Enterprise','Sur mesure','',['Employés illimités','Admins illimités','Multi-sites','API & intégrations','Account manager dédié','SLA 99.9%'],current==='enterprise')}
+    </div>
+
+    <div class="card">
+      <h4 style="margin-bottom:16px">Changer de plan</h4>
+      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:16px">
+        Pour passer à un plan supérieur, effectuez un virement bancaire puis contactez-nous. Votre plan sera activé sous 24h.
+      </p>
+      <div style="background:var(--input-bg);border-radius:12px;padding:20px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Coordonnées bancaires</div>
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;font-size:14px">
+          <span style="color:var(--muted)">Titulaire</span><span style="font-weight:600">Camélia SAS</span>
+          <span style="color:var(--muted)">IBAN</span><span style="font-weight:600;font-family:monospace;font-size:13px">FR76 XXXX XXXX XXXX XXXX XXXX XXX</span>
+          <span style="color:var(--muted)">BIC</span><span style="font-weight:600;font-family:monospace">XXXXXXXX</span>
+          <span style="color:var(--muted)">Référence</span><span style="font-weight:600">${planData.companySlug || 'votre-entreprise'}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a href="mailto:contact@camelia.app?subject=Changement de plan&body=Bonjour, je souhaite passer au plan _________." class="btn btn-primary btn-sm" style="text-decoration:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+          Nous contacter par email
+        </a>
+      </div>
+    </div>
   </div>`;
 }
 

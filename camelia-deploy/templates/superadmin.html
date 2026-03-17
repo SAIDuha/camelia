@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camélia — Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3a;--text:#e8e9ed;--muted:#7a7d8e;--primary:#c77dba;--primary-light:#c77dba33;--danger:#e85d5d;--success:#5dcc8f;--warning:#e8b44d;--blue:#8ba4f0;--input-bg:#1e2130;--font-display:'Playfair Display',Georgia,serif;--font-body:'DM Sans','Segoe UI',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .4s ease both}
+
+/* Login */
+#sa-login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.sa-login-box{max-width:380px;width:100%}
+.sa-login-box h1{font-family:var(--font-display);font-size:28px;text-align:center;margin-bottom:8px}
+.sa-login-box p{text-align:center;color:var(--muted);font-size:13px;margin-bottom:28px}
+.sa-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
+.sa-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:block}
+.sa-input{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;margin-bottom:14px}
+.sa-input:focus{border-color:var(--primary)}
+.sa-btn{width:100%;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-body)}
+.sa-btn:hover{opacity:.9}
+.sa-error{color:var(--danger);font-size:13px;margin-bottom:10px;display:none}
+
+/* Dashboard */
+#sa-app{display:none;padding:24px;max-width:1200px;margin:0 auto}
+.sa-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.sa-header h1{font-family:var(--font-display);font-size:24px;display:flex;align-items:center;gap:8px}
+.sa-header h1 span{color:var(--primary)}
+.sa-logout{background:none;border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:var(--font-body)}
+.sa-logout:hover{border-color:var(--danger);color:var(--danger)}
+
+/* Stats */
+.sa-stats{display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap}
+.sa-stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 22px;flex:1;min-width:150px}
+.sa-stat .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.sa-stat .value{font-size:28px;font-weight:700;font-family:var(--font-display)}
+
+/* Table */
+.sa-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;overflow-x:auto}
+.sa-table-wrap h3{font-size:16px;font-family:var(--font-display);margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover{background:#ffffff08}
+
+.plan-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+.plan-badge.starter{background:#c77dba22;color:var(--primary)}
+.plan-badge.pro{background:#8ba4f022;color:var(--blue)}
+.plan-badge.enterprise{background:#5dcc8f22;color:var(--success)}
+
+.sa-select{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:12px;font-family:var(--font-body);cursor:pointer}
+.sa-select:focus{border-color:var(--primary);outline:none}
+
+.active-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.toggle-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--font-body)}
+.toggle-btn:hover{border-color:var(--warning);color:var(--warning)}
+
+.toast{position:fixed;bottom:24px;right:24px;z-index:2000;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.3);display:none;font-family:var(--font-body)}
+.toast.success{background:var(--success);display:block}.toast.error{background:var(--danger);display:block}
+
+@media(max-width:640px){#sa-app{padding:14px}.sa-stats{gap:10px}.sa-stat{min-width:120px;padding:14px}.sa-stat .value{font-size:22px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="sa-login" class="fade-up">
+  <div class="sa-login-box">
+    <h1>🌸 Super Admin</h1>
+    <p>Panneau de gestion Camélia</p>
+    <div class="sa-card">
+      <label class="sa-label">Email</label>
+      <input id="sa-email" class="sa-input" type="email" placeholder="admin@camelia.app">
+      <label class="sa-label">Mot de passe</label>
+      <input id="sa-pass" class="sa-input" type="password" placeholder="••••••••">
+      <div id="sa-error" class="sa-error"></div>
+      <button class="sa-btn" onclick="saLogin()">Connexion</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="sa-app">
+  <div class="sa-header">
+    <h1><span>🌸</span> Camélia Super Admin</h1>
+    <button class="sa-logout" onclick="saLogout()">Déconnexion</button>
+  </div>
+  <div class="sa-stats" id="sa-stats"></div>
+  <div class="sa-table-wrap">
+    <h3>Toutes les entreprises</h3>
+    <table>
+      <thead><tr><th>Entreprise</th><th>Admin</th><th>Email</th><th>Employés</th><th>Plan</th><th>Changer plan</th><th>Statut</th><th>Créé le</th></tr></thead>
+      <tbody id="sa-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="sa-toast" class="toast"></div>
+
+<script>
+async function saApi(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: {"Content-Type":"application/json", ...opts.headers},
+    ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Erreur");
+  return data;
+}
+
+function saToast(msg, type = "success") {
+  const el = document.getElementById("sa-toast");
+  el.textContent = msg; el.className = `toast ${type}`;
+  setTimeout(() => el.className = "toast", 3000);
+}
+
+// Login
+async function saLogin() {
+  const email = document.getElementById("sa-email").value.trim();
+  const pass = document.getElementById("sa-pass").value;
+  const err = document.getElementById("sa-error");
+  err.style.display = "none";
+  try {
+    await saApi("/api/superadmin/login", {method:"POST", body:{email, password:pass}});
+    document.getElementById("sa-login").style.display = "none";
+    document.getElementById("sa-app").style.display = "block";
+    loadDashboard();
+  } catch(e) { err.textContent = e.message; err.style.display = "block"; }
+}
+
+async function saLogout() {
+  await saApi("/api/superadmin/logout", {method:"POST"}).catch(()=>{});
+  document.getElementById("sa-login").style.display = "flex";
+  document.getElementById("sa-app").style.display = "none";
+}
+
+document.getElementById("sa-pass").addEventListener("keydown", e => { if(e.key==="Enter") saLogin(); });
+
+// Dashboard
+async function loadDashboard() {
+  try {
+    const [stats, companies] = await Promise.all([
+      saApi("/api/superadmin/stats"),
+      saApi("/api/superadmin/companies")
+    ]);
+
+    // Stats
+    const planBreak = stats.planBreakdown || {};
+    document.getElementById("sa-stats").innerHTML = `
+      <div class="sa-stat"><div class="label">Entreprises</div><div class="value">${stats.totalCompanies}</div></div>
+      <div class="sa-stat"><div class="label">Employés</div><div class="value">${stats.totalEmployees}</div></div>
+      <div class="sa-stat"><div class="label">Badges total</div><div class="value">${stats.totalBadges}</div></div>
+      <div class="sa-stat"><div class="label">Starter</div><div class="value" style="color:var(--primary)">${planBreak.starter||0}</div></div>
+      <div class="sa-stat"><div class="label">Pro</div><div class="value" style="color:var(--blue)">${planBreak.pro||0}</div></div>
+      <div class="sa-stat"><div class="label">Enterprise</div><div class="value" style="color:var(--success)">${planBreak.enterprise||0}</div></div>
+    `;
+
+    // Table
+    document.getElementById("sa-tbody").innerHTML = companies.map(c => {
+      const created = c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-FR') : '—';
+      return `<tr>
+        <td><strong>${c.name}</strong><br><span style="color:var(--muted);font-size:11px">${c.slug}</span></td>
+        <td>${c.adminName}</td>
+        <td style="font-size:12px">${c.adminEmail}</td>
+        <td>${c.employeeCount} / ${c.maxEmployees}</td>
+        <td><span class="plan-badge ${c.plan}">${c.plan}</span></td>
+        <td>
+          <select class="sa-select" onchange="changePlan('${c.id}', this.value)" value="${c.plan}">
+            <option value="starter" ${c.plan==='starter'?'selected':''}>Starter (10)</option>
+            <option value="pro" ${c.plan==='pro'?'selected':''}>Pro (100)</option>
+            <option value="enterprise" ${c.plan==='enterprise'?'selected':''}>Enterprise (∞)</option>
+          </select>
+        </td>
+        <td>
+          <span class="active-dot" style="background:${c.isActive?'var(--success)':'var(--danger)'}"></span>
+          ${c.isActive?'Actif':'Inactif'}
+          <button class="toggle-btn" onclick="toggleCompany('${c.id}')" style="margin-left:6px">${c.isActive?'Désactiver':'Activer'}</button>
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${created}</td>
+      </tr>`;
+    }).join('');
+
+  } catch(e) { saToast(e.message, "error"); }
+}
+
+async function changePlan(companyId, plan) {
+  try {
+    await saApi(`/api/superadmin/companies/${companyId}/plan`, {method:"PUT", body:{plan}});
+    saToast(`Plan changé en ${plan.toUpperCase()}`);
+    loadDashboard();
+  } catch(e) { saToast(e.message, "error"); }
+}
+
+async function toggleCompany(companyId) {
+  try {
+    const res = await saApi(`/api/superadmin/companies/${companyId}/toggle`, {method:"PUT"});
+    saToast(res.isActive ? "Entreprise activée" : "Entreprise désactivée");
+    loadDashboard();
+  } catch(e) { saToast(e.message, "error"); }
+}
+</script>
+</body>
+</html>

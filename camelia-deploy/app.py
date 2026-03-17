@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify, render_template, session, send_from_directory
 
 from db import get_db, q, q1, ex, PH, init_db, seed_demo
-from stripe_routes import stripe_bp
+from superadmin_routes import superadmin_bp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -20,23 +20,7 @@ PLAN_LIMITS = {
 
 init_db()
 seed_demo()
-
-# Register Stripe routes
-app.register_blueprint(stripe_bp)
-
-# Run Stripe migration (adds columns if not exist)
-def run_stripe_migration():
-    try:
-        with get_db() as conn:
-            cur = conn.cursor()
-            cur.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)")
-            cur.execute("ALTER TABLE companies ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)")
-            conn.commit()
-    except Exception as e:
-        print(f"[Stripe migration] {e}")
-
-if os.environ.get('DATABASE_URL'):
-    run_stripe_migration()
+app.register_blueprint(superadmin_bp)
 
 # ═══════════════════════════════════════════
 # AUTH DECORATORS
@@ -516,7 +500,8 @@ def api_plan():
     return jsonify({
         "plan": co['plan'],
         "limits": limits,
-        "usage": {"employees": emp_count['c'] if emp_count else 0}
+        "usage": {"employees": emp_count['c'] if emp_count else 0},
+        "companySlug": co.get('slug', '')
     })
 
 if __name__ == '__main__':
