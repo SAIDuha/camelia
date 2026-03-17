@@ -228,24 +228,31 @@ tbody tr:hover{background:var(--primary-light)}
       <p>Système de pointage intelligent</p>
     </div>
     <div class="login-card">
-      <div class="form-group">
-        <label class="form-label">Identifiant employé</label>
-        <input id="login-id" class="form-input" placeholder="Ex: E001" autocomplete="off">
+      <div style="display:flex;gap:4px;margin-bottom:22px;background:var(--input-bg);border-radius:10px;padding:3px">
+        <button class="tab active" id="tab-login" onclick="switchAuthTab('login')" style="flex:1;margin:0;border:none;border-radius:8px">Connexion</button>
+        <button class="tab" id="tab-register" onclick="switchAuthTab('register')" style="flex:1;margin:0;border:none;border-radius:8px">Inscription</button>
       </div>
-      <div class="form-group" style="margin-bottom:22px">
-        <label class="form-label">Code PIN</label>
-        <input id="login-pin" class="form-input pin" type="password" placeholder="••••" maxlength="4">
+      <div id="form-login">
+        <div class="form-group"><label class="form-label">Email</label><input id="login-email" class="form-input" type="email" placeholder="vous@entreprise.com" autocomplete="email"></div>
+        <div class="form-group" style="margin-bottom:22px"><label class="form-label">Mot de passe</label><input id="login-password" class="form-input" type="password" placeholder="••••••••"></div>
+        <div id="login-error" class="form-error"></div>
+        <button class="btn btn-primary btn-block" onclick="doLogin()" id="login-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Se connecter</button>
       </div>
-      <div id="login-error" class="form-error"></div>
-      <button class="btn btn-primary btn-block" onclick="doLogin()" id="login-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
-        Se connecter
-      </button>
+      <div id="form-register" style="display:none">
+        <div class="form-group"><label class="form-label">Nom de l entreprise</label><input id="reg-company" class="form-input" placeholder="Mon entreprise"></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Prenom</label><input id="reg-fn" class="form-input" placeholder="Jean"></div>
+        <div class="form-group"><label class="form-label">Nom</label><input id="reg-ln" class="form-input" placeholder="Dupont"></div></div>
+        <div class="form-group"><label class="form-label">Email</label><input id="reg-email" class="form-input" type="email" placeholder="vous@entreprise.com"></div>
+        <div class="form-group" style="margin-bottom:22px"><label class="form-label">Mot de passe (6 car. min.)</label><input id="reg-password" class="form-input" type="password" placeholder="••••••••"></div>
+        <div id="register-error" class="form-error"></div>
+        <button class="btn btn-primary btn-block" onclick="doRegister()" id="register-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Creer mon entreprise</button>
+      </div>
     </div>
-    <div class="login-demo"><strong>Démo</strong> — Admin: E001 / 1234 · Salarié: E002 / 5678</div>
-    <div style="display:flex;justify-content:center;margin-top:16px">
-      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn-login"></button>
-    </div>
+    <div style="display:flex;justify-content:center;margin-top:16px"><button class="icon-btn" onclick="toggleTheme()" id="theme-btn-login"></button></div>
   </div>
 </div>
 
@@ -372,39 +379,55 @@ function toast(msg, type = "success") {
 // ═══════════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.getElementById('form-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('form-register').style.display = tab==='register'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-register').classList.toggle('active',tab==='register');
+}
+function enterApp(u) {
+  user = u;
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app-header").style.display = "flex";
+  document.getElementById("app-content").style.display = "block";
+  document.getElementById("header-avatar").textContent = user.avatar;
+  updateClock(); adminPage = "dashboard"; viewPeriod = "week"; render();
+}
 async function doLogin() {
-  const code = document.getElementById("login-id").value.trim();
-  const pin = document.getElementById("login-pin").value;
+  const email = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
   const errEl = document.getElementById("login-error");
   const btn = document.getElementById("login-btn");
-  errEl.style.display = "none";
-  btn.disabled = true;
+  errEl.style.display = "none"; btn.disabled = true;
+  try { enterApp(await api("/api/login",{method:"POST",body:{email,password}})); }
+  catch(e) { errEl.textContent = e.message; errEl.style.display = "block"; }
+  btn.disabled = false;
+}
+async function doRegister() {
+  const errEl = document.getElementById("register-error");
+  const btn = document.getElementById("register-btn");
+  errEl.style.display = "none"; btn.disabled = true;
   try {
-    user = await api("/api/login", { method:"POST", body:{code, pin} });
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("app-header").style.display = "flex";
-    document.getElementById("app-content").style.display = "block";
-    document.getElementById("header-avatar").textContent = user.avatar;
-    updateClock();
-    adminPage = "dashboard"; viewPeriod = "week";
-    render();
-  } catch(e) {
-    errEl.textContent = e.message; errEl.style.display = "block";
-  }
+    const data = await api("/api/register",{method:"POST",body:{
+      companyName:document.getElementById("reg-company").value.trim(),
+      firstName:document.getElementById("reg-fn").value.trim(),
+      lastName:document.getElementById("reg-ln").value.trim(),
+      email:document.getElementById("reg-email").value.trim(),
+      password:document.getElementById("reg-password").value}});
+    toast("Entreprise creee !"); enterApp(data.user);
+  } catch(e) { errEl.textContent = e.message; errEl.style.display = "block"; }
   btn.disabled = false;
 }
 async function doLogout() {
-  await api("/api/logout", {method:"POST"}).catch(()=>{});
+  await api("/api/logout",{method:"POST"}).catch(()=>{});
   user = null; adminPage = "dashboard"; selectedEmpId = null;
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("app-header").style.display = "none";
   document.getElementById("app-content").style.display = "none";
-  document.getElementById("login-id").value = "";
-  document.getElementById("login-pin").value = "";
 }
-
-document.getElementById("login-pin").addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
-document.getElementById("login-id").addEventListener("keydown", e => { if(e.key==="Enter") document.getElementById("login-pin").focus(); });
+document.getElementById("login-password").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+document.getElementById("login-email").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("login-password").focus();});
+document.getElementById("reg-password").addEventListener("keydown",e=>{if(e.key==="Enter")doRegister();});
 
 // ═══════════════════════════════════════════
 // WEBCAM
@@ -704,8 +727,8 @@ function employeeForm(emp) {
       <div class="form-group"><label class="form-label">Nom *</label><input id="ef-ln" class="form-input" value="${emp.lastName||""}" placeholder="Dupont"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Code employé *</label><input id="ef-code" class="form-input" value="${emp.code||""}" placeholder="E005" ${isEdit?"disabled":""}></div>
-      <div class="form-group"><label class="form-label">${isEdit?"Nouveau PIN (laisser vide)":"PIN *"}</label><input id="ef-pin" class="form-input pin" type="password" maxlength="4" placeholder="••••"></div>
+      <div class="form-group"><label class="form-label">Email *</label><input id="ef-email2" class="form-input" type="email" value="${emp.email||""}" placeholder="jean@entreprise.com" ${isEdit?"disabled":""}></div>
+      <div class="form-group"><label class="form-label">${isEdit?"Nouveau mot de passe (laisser vide)":"Mot de passe *"}</label><input id="ef-password" class="form-input" type="password" placeholder="6 caracteres min."></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Email</label><input id="ef-email" class="form-input" type="email" value="${emp.email||""}" placeholder="jean@entreprise.com"></div>
@@ -734,15 +757,15 @@ async function saveEmployee(empId) {
     position: document.getElementById("ef-pos").value.trim(),
     role: document.getElementById("ef-role").value,
   };
-  const pin = document.getElementById("ef-pin").value;
-  if (pin) body.pin = pin;
+  const pw = document.getElementById("ef-password").value;
+  if (pw) body.password = pw;
   const errEl = document.getElementById("ef-error");
 
-  if (!body.firstName || !body.lastName || !body.code) {
-    errEl.textContent = "Prénom, nom et code sont requis"; errEl.style.display = "block"; return;
+  if (!body.firstName || !body.lastName) {
+    errEl.textContent = "Prénom et nom sont requis"; errEl.style.display = "block"; return;
   }
-  if (!empId && !pin) {
-    errEl.textContent = "Le PIN est requis pour un nouvel employé"; errEl.style.display = "block"; return;
+  if (!empId && !pw) {
+    errEl.textContent = "Le mot de passe est requis"; errEl.style.display = "block"; return;
   }
   try {
     if (empId) await api(`/api/employees/${empId}`, {method:"PUT", body});
