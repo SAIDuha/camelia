@@ -726,12 +726,13 @@ function employeeForm(emp) {
       <div class="form-group"><label class="form-label">Prénom *</label><input id="ef-fn" class="form-input" value="${emp.firstName||""}" placeholder="Jean"></div>
       <div class="form-group"><label class="form-label">Nom *</label><input id="ef-ln" class="form-input" value="${emp.lastName||""}" placeholder="Dupont"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">Email *</label><input id="ef-email2" class="form-input" type="email" value="${emp.email||""}" placeholder="jean@entreprise.com" ${isEdit?"disabled":""}></div>
-      <div class="form-group"><label class="form-label">${isEdit?"Nouveau mot de passe (laisser vide)":"Mot de passe *"}</label><input id="ef-password" class="form-input" type="password" placeholder="6 caracteres min."></div>
+    <div class="form-group">
+      <label class="form-label">Email *</label><input id="ef-email" class="form-input" type="email" value="${emp.email||""}" placeholder="jean@entreprise.com" ${isEdit?"disabled":""}>
+    </div>
+    <div class="form-group">
+      <label class="form-label">${isEdit?"Nouveau mot de passe (laisser vide)":"Mot de passe *"}</label><input id="ef-password" class="form-input" type="password" placeholder="6 caracteres min.">
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Email</label><input id="ef-email" class="form-input" type="email" value="${emp.email||""}" placeholder="jean@entreprise.com"></div>
       <div class="form-group"><label class="form-label">Rôle</label>
         <select id="ef-role" class="form-select"><option value="employee" ${emp.role==="employee"?"selected":""}>Employé</option><option value="admin" ${emp.role==="admin"?"selected":""}>Administrateur</option></select>
       </div>
@@ -751,7 +752,6 @@ async function saveEmployee(empId) {
   const body = {
     firstName: document.getElementById("ef-fn").value.trim(),
     lastName: document.getElementById("ef-ln").value.trim(),
-    code: document.getElementById("ef-code").value.trim().toUpperCase(),
     email: document.getElementById("ef-email").value.trim(),
     department: document.getElementById("ef-dept").value.trim(),
     position: document.getElementById("ef-pos").value.trim(),
@@ -761,8 +761,8 @@ async function saveEmployee(empId) {
   if (pw) body.password = pw;
   const errEl = document.getElementById("ef-error");
 
-  if (!body.firstName || !body.lastName) {
-    errEl.textContent = "Prénom et nom sont requis"; errEl.style.display = "block"; return;
+  if (!body.firstName || !body.lastName || !body.email) {
+    errEl.textContent = "Prénom, nom et email sont requis"; errEl.style.display = "block"; return;
   }
   if (!empId && !pw) {
     errEl.textContent = "Le mot de passe est requis"; errEl.style.display = "block"; return;
