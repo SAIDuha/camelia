@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camélia — Système de Pointage</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f7f5f2;--card:#ffffff;--border:#e8e3dd;--text:#2c2825;
+  --muted:#9a938c;--primary:#b5577a;--primary-light:#b5577a1a;--primary-hover:#a04a6a;
+  --danger:#d94848;--danger-light:#d948481a;--success:#3aab6d;--success-light:#3aab6d1a;
+  --warning:#d4973a;--warning-light:#d4973a1a;--blue:#6b8aed;--blue-light:#6b8aed1a;
+  --input-bg:#f0ece7;--shadow:0 1px 3px rgba(0,0,0,.04);
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'DM Sans','Segoe UI',sans-serif;
+  --radius:14px;--radius-lg:20px;
+}
+[data-theme="dark"] {
+  --bg:#0f1117;--card:#1a1d27;--border:#2a2d3a;--text:#e8e9ed;
+  --muted:#7a7d8e;--primary:#c77dba;--primary-light:#c77dba1a;--primary-hover:#d490c8;
+  --danger:#e85d5d;--danger-light:#e85d5d1a;--success:#5dcc8f;--success-light:#5dcc8f1a;
+  --warning:#e8b44d;--warning-light:#e8b44d1a;--blue:#8ba4f0;--blue-light:#8ba4f01a;
+  --input-bg:#1e2130;--shadow:0 1px 3px rgba(0,0,0,.2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+a{color:var(--primary);text-decoration:none}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes countPulse{0%{transform:scale(.5);opacity:0}50%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes flashOut{from{opacity:1}to{opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.fade-up{animation:fadeUp .45s ease both}.fade-in{animation:fadeIn .3s ease both}
+
+/* ── Layout ── */
+.container{max-width:1100px;margin:0 auto;padding:28px}
+@media(max-width:640px){.container{padding:16px}}
+
+/* ── Header ── */
+.header{display:none;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.header .logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:22px;font-weight:700}
+.header .logo svg{color:var(--primary)}
+.header .right{display:flex;align-items:center;gap:12px}
+.header .datetime{font-size:13px;color:var(--muted)}
+.header .datetime strong{color:var(--text);font-variant-numeric:tabular-nums}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--primary);flex-shrink:0}
+.avatar.lg{width:56px;height:56px;font-size:20px}
+.avatar.md{width:42px;height:42px;font-size:14px}
+.icon-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:8px;display:flex;align-items:center;transition:all .2s}
+.icon-btn:hover{background:var(--primary-light);color:var(--primary)}
+.btn-link{background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px;font-family:var(--font-body);transition:color .2s}
+.btn-link:hover{color:var(--primary)}
+@media(max-width:640px){.header{padding:12px 16px}.header .datetime{display:none}}
+
+/* ── Login ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{max-width:400px;width:100%}
+.login-logo{text-align:center;margin-bottom:36px}
+.login-logo svg{color:var(--primary)}
+.login-logo h1{font-family:var(--font-display);font-size:38px;font-weight:800;letter-spacing:-.02em;margin-top:12px}
+.login-logo p{color:var(--muted);font-size:14px;margin-top:6px}
+.login-card{background:var(--card);border-radius:var(--radius-lg);padding:32px;border:1px solid var(--border);box-shadow:0 12px 40px rgba(0,0,0,.06)}
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.form-input{width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--input-bg);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--primary)}
+.form-input.pin{letter-spacing:6px}
+.form-row{display:flex;gap:12px}.form-row .form-group{flex:1}
+.form-select{width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--input-bg);font-size:14px;font-family:var(--font-body);color:var(--text);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a938c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.form-select:focus{border-color:var(--primary)}
+.form-error{color:var(--danger);font-size:13px;margin-bottom:12px;font-weight:500;display:none}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all .2s}
+.btn:hover{opacity:.9}.btn:disabled{opacity:.4;cursor:default}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:10px}
+.btn-block{width:100%}
+.btn-back{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--primary);font-size:14px;font-weight:500;cursor:pointer;margin-bottom:20px;font-family:var(--font-body);padding:0}
+.btn-back:hover{text-decoration:underline}
+
+.login-demo{text-align:center;margin-top:20px;font-size:12px;color:var(--muted)}.login-demo strong{font-weight:700}
+
+/* ── Badge Buttons ── */
+.badge-row{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}
+.badge-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:22px 18px;border-radius:18px;border:2px solid var(--border);background:var(--card);cursor:pointer;transition:all .25s;flex:1 1 120px;min-width:120px;font-family:var(--font-body)}
+.badge-btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.06)}
+.badge-btn:disabled{opacity:.4;cursor:default}
+.badge-btn.active{background:color-mix(in srgb,var(--c) 7%,transparent);border-color:var(--c)}
+.badge-btn .b-label{font-size:14px;font-weight:600;color:var(--text)}
+.badge-btn .b-sub{font-size:11px;color:var(--muted)}
+
+/* ── Stat Cards ── */
+.stats-row{display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap}
+.stat-card{background:var(--card);border-radius:16px;padding:20px 22px;border:1px solid var(--border);flex:1 1 160px;min-width:160px;transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.08)}
+.stat-card .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.stat-card .s-label{font-size:13px;color:var(--muted);font-weight:500;letter-spacing:.02em}
+.stat-card .s-icon{opacity:.7}
+.stat-card .s-value{font-size:28px;font-weight:700;font-family:var(--font-display);line-height:1.1}
+.stat-card .s-sub{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:7px 16px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:all .2s}
+.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.tab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
+
+/* ── Cards ── */
+.card{background:var(--card);border-radius:var(--radius-lg);padding:22px;border:1px solid var(--border);margin-bottom:24px}
+.card h4{font-size:14px;font-weight:600;font-family:var(--font-display);margin-bottom:14px}
+
+/* ── Mini Bars ── */
+.mini-bars{display:flex;align-items:flex-end;gap:4px;height:60px}
+.mini-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.mini-bar .bar{width:100%;min-width:8px;border-radius:5px;background:var(--primary-light);transition:height .5s ease}
+.mini-bar .bar.today{background:var(--primary)}
+.mini-bar .lbl{font-size:9px;color:var(--muted)}
+
+/* ── Table ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid var(--border)}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--border)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--primary-light)}
+.text-success{color:var(--success);font-weight:600}.text-warning{color:var(--warning);font-weight:600}.text-muted{color:var(--muted)}.text-danger{color:var(--danger)}
+.fw600{font-weight:600}
+.td-photo{display:flex;gap:4px}
+.td-photo img{width:32px;height:32px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border);transition:transform .2s}
+.td-photo img:hover{transform:scale(1.1)}
+
+/* ── Team List ── */
+.team-list{display:flex;flex-direction:column;gap:8px}
+.team-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.team-row:hover{background:var(--primary-light);border-color:var(--primary)}
+.team-row .info{flex:1;min-width:0}
+.team-row .name{font-size:15px;font-weight:600}
+.team-row .dept{font-size:12px;color:var(--muted)}
+.team-row .status{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.team-row .status span:last-child{font-size:13px;font-weight:500;text-transform:capitalize}
+.team-row .hours{text-align:right;flex-shrink:0;min-width:80px}
+.team-row .hours .val{font-size:14px;font-weight:600}
+.team-row .hours .lbl{font-size:11px;color:var(--muted)}
+.team-row .thumb{width:36px;height:36px;border-radius:8px;object-fit:cover;border:2px solid var(--border)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+/* ── Modal ── */
+.modal-backdrop{display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(8px)}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--card);border-radius:var(--radius-lg);padding:28px;max-width:520px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.3);position:relative;max-height:90vh;overflow-y:auto;animation:fadeUp .3s ease}
+.modal-lg{max-width:600px}
+.modal .close-btn{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:8px;transition:all .2s}
+.modal .close-btn:hover{background:var(--danger-light);color:var(--danger)}
+.modal h3{margin-bottom:20px;font-family:var(--font-display);font-weight:600;font-size:18px;display:flex;align-items:center;gap:8px}
+
+/* ── Webcam ── */
+.webcam-preview{position:relative;border-radius:var(--radius);overflow:hidden;background:#000}
+.webcam-preview video{width:100%;display:block;transform:scaleX(-1)}
+.webcam-error{padding:40px;text-align:center;color:var(--danger)}
+.countdown-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4)}
+.countdown-num{font-size:80px;font-weight:800;color:#fff;font-family:var(--font-display);text-shadow:0 4px 30px rgba(0,0,0,.5);animation:countPulse .5s ease}
+.flash-overlay{position:absolute;inset:0;background:#fff;animation:flashOut .3s ease forwards}
+
+/* ── Lightbox ── */
+#lightbox{display:none;position:fixed;inset:0;z-index:1001;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;cursor:pointer}
+#lightbox.open{display:flex}
+#lightbox img{max-width:90%;max-height:85vh;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+/* ── Page Title ── */
+.page-title{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:4px}
+.page-sub{display:flex;align-items:center;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.page-sub span{font-size:14px;color:var(--muted)}
+
+/* ── Emp Header ── */
+.emp-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.emp-header .meta h2{margin:0}.emp-header .meta p{color:var(--muted);font-size:14px;margin:0}
+
+/* ── Spinner ── */
+.spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+.page-spinner{display:flex;justify-content:center;padding:60px}
+
+/* ── Nav Tabs (Admin) ── */
+.nav-tabs{display:flex;gap:4px;margin-bottom:28px;background:var(--card);border-radius:12px;padding:4px;border:1px solid var(--border);width:fit-content}
+.nav-tab{padding:8px 18px;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);color:var(--muted);transition:all .2s;border:none;background:none}
+.nav-tab.active{background:var(--primary);color:#fff}
+.nav-tab:hover:not(.active){color:var(--text)}
+
+/* ── Badge in table ── */
+.role-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.05em}
+.role-badge.admin{background:var(--primary-light);color:var(--primary)}
+.role-badge.employee{background:var(--blue-light);color:var(--blue)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:2000;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:500;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.2);animation:fadeUp .3s ease;font-family:var(--font-body);display:none}
+.toast.success{background:var(--success);display:block}
+.toast.error{background:var(--danger);display:block}
+
+/* ── Responsive ── */
+@media(max-width:640px){
+  .stats-row{gap:10px}.stat-card{min-width:130px;padding:14px 16px}.stat-card .s-value{font-size:22px}
+  .badge-btn{min-width:100px;padding:16px 10px}
+  .team-row{flex-wrap:wrap;gap:10px}.team-row .hours{min-width:auto}
+  .modal{padding:20px;width:95%}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login-screen" class="fade-up">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="float">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".3"/><path d="M12 2C9 2 9 5.5 12 7c3-1.5 3-5 0-5zM22 12c0-3-3.5-3-5 0 1.5 3 5 3 5 0zM12 22c3 0 3-3.5 0-5-3 1.5-3 5 0 5zM2 12c0 3 3.5 3 5 0-1.5-3-5-3-5 0zM4.93 4.93c-1.5 2.6.9 4.5 3.07 3.07-2.17-1.43-.47-4.57-3.07-3.07zM19.07 4.93c-2.6-1.5-4.5.9-3.07 3.07 1.43-2.17 4.57-.47 3.07-3.07zM19.07 19.07c1.5-2.6-.9-4.5-3.07-3.07 2.17 1.43.47 4.57 3.07 3.07zM4.93 19.07c2.6 1.5 4.5-.9 3.07-3.07-1.43 2.17-4.57.47-3.07 3.07z"/></svg>
+      </div>
+      <h1>Camélia</h1>
+      <p>Système de pointage intelligent</p>
+    </div>
+    <div class="login-card">
+      <div class="form-group">
+        <label class="form-label">Identifiant employé</label>
+        <input id="login-id" class="form-input" placeholder="Ex: E001" autocomplete="off">
+      </div>
+      <div class="form-group" style="margin-bottom:22px">
+        <label class="form-label">Code PIN</label>
+        <input id="login-pin" class="form-input pin" type="password" placeholder="••••" maxlength="4">
+      </div>
+      <div id="login-error" class="form-error"></div>
+      <button class="btn btn-primary btn-block" onclick="doLogin()" id="login-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        Se connecter
+      </button>
+    </div>
+    <div class="login-demo"><strong>Démo</strong> — Admin: E001 / 1234 · Salarié: E002 / 5678</div>
+    <div style="display:flex;justify-content:center;margin-top:16px">
+      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn-login"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="header" id="app-header">
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".3"/><path d="M12 2C9 2 9 5.5 12 7c3-1.5 3-5 0-5zM22 12c0-3-3.5-3-5 0 1.5 3 5 3 5 0zM12 22c3 0 3-3.5 0-5-3 1.5-3 5 0 5zM2 12c0 3 3.5 3 5 0-1.5-3-5-3-5 0zM4.93 4.93c-1.5 2.6.9 4.5 3.07 3.07-2.17-1.43-.47-4.57-3.07-3.07zM19.07 4.93c-2.6-1.5-4.5.9-3.07 3.07 1.43-2.17 4.57-.47 3.07-3.07zM19.07 19.07c1.5-2.6-.9-4.5-3.07-3.07 2.17 1.43.47 4.57 3.07 3.07zM4.93 19.07c2.6 1.5 4.5-.9 3.07-3.07-1.43 2.17-4.57.47-3.07 3.07z"/></svg>
+    <span>Camélia</span>
+  </div>
+  <div class="right">
+    <span class="datetime" id="header-datetime"></span>
+    <button class="icon-btn" onclick="toggleTheme()" id="theme-btn-header"></button>
+    <div class="avatar" id="header-avatar"></div>
+    <button class="btn-link" onclick="doLogout()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Déconnexion
+    </button>
+  </div>
+</header>
+
+<!-- ══════════ MAIN ══════════ -->
+<main id="app-content" class="container" style="display:none"></main>
+
+<!-- ══════════ MODALS ══════════ -->
+<div class="modal-backdrop" id="webcam-modal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeWebcam()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Capture de vérification</h3>
+    <div id="webcam-body"></div>
+    <button class="btn btn-primary btn-block" id="capture-btn" onclick="startCapture()" disabled style="margin-top:16px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span id="capture-btn-text">Chargement...</span>
+    </button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="employee-modal">
+  <div class="modal modal-lg">
+    <button class="close-btn" onclick="closeEmployeeModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h3 id="emp-modal-title">Nouvel employé</h3>
+    <div id="emp-modal-body"></div>
+  </div>
+</div>
+
+<div id="lightbox" onclick="closeLightbox()"><img id="lightbox-img" src="" alt="Photo"></div>
+<div id="toast" class="toast"></div>
+<canvas id="snap-canvas" style="display:none"></canvas>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let user = null;
+let currentAction = null;
+let mediaStream = null;
+let viewPeriod = "week";
+let adminPage = "dashboard"; // dashboard | employees | employee-detail
+let selectedEmpId = null;
+
+const statusColors = {absent:"var(--muted)","présent":"var(--success)",pause:"var(--warning)",parti:"var(--primary)"};
+
+// ═══════════════════════════════════════════
+// API HELPERS
+// ═══════════════════════════════════════════
+async function api(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: {"Content-Type":"application/json", ...opts.headers},
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Erreur serveur");
+  return data;
+}
+
+function fmt(mins) {
+  if (mins === null || mins === undefined) return "—";
+  return Math.floor(mins/60) + "h" + String(Math.round(mins%60)).padStart(2,"0");
+}
+function weekNum() {
+  const d = new Date(); d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+3-((d.getDay()+6)%7));
+  const w1 = new Date(d.getFullYear(),0,4);
+  return 1+Math.round(((d-w1)/864e5-3+((w1.getDay()+6)%7))/7);
+}
+
+// ═══════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════
+let darkMode = localStorage.getItem("camelia-dark") === "true";
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+  const svg = darkMode
+    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
+    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
+  document.querySelectorAll(".icon-btn[onclick='toggleTheme()'], #theme-btn-login, #theme-btn-header").forEach(b => b.innerHTML = svg);
+}
+function toggleTheme() { darkMode = !darkMode; localStorage.setItem("camelia-dark", darkMode); applyTheme(); }
+applyTheme();
+
+// ═══════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const el = document.getElementById("header-datetime");
+  if (el) {
+    const d = now.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+    const t = now.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    el.innerHTML = `${d} · <strong>${t}</strong>`;
+  }
+}
+setInterval(updateClock, 1000);
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function toast(msg, type = "success") {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.className = `toast ${type}`;
+  setTimeout(() => el.className = "toast", 3000);
+}
+
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
+async function doLogin() {
+  const code = document.getElementById("login-id").value.trim();
+  const pin = document.getElementById("login-pin").value;
+  const errEl = document.getElementById("login-error");
+  const btn = document.getElementById("login-btn");
+  errEl.style.display = "none";
+  btn.disabled = true;
+  try {
+    user = await api("/api/login", { method:"POST", body:{code, pin} });
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app-header").style.display = "flex";
+    document.getElementById("app-content").style.display = "block";
+    document.getElementById("header-avatar").textContent = user.avatar;
+    updateClock();
+    adminPage = "dashboard"; viewPeriod = "week";
+    render();
+  } catch(e) {
+    errEl.textContent = e.message; errEl.style.display = "block";
+  }
+  btn.disabled = false;
+}
+async function doLogout() {
+  await api("/api/logout", {method:"POST"}).catch(()=>{});
+  user = null; adminPage = "dashboard"; selectedEmpId = null;
+  document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("app-header").style.display = "none";
+  document.getElementById("app-content").style.display = "none";
+  document.getElementById("login-id").value = "";
+  document.getElementById("login-pin").value = "";
+}
+
+document.getElementById("login-pin").addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
+document.getElementById("login-id").addEventListener("keydown", e => { if(e.key==="Enter") document.getElementById("login-pin").focus(); });
+
+// ═══════════════════════════════════════════
+// WEBCAM
+// ═══════════════════════════════════════════
+function openWebcam(action) {
+  currentAction = action;
+  const modal = document.getElementById("webcam-modal");
+  const body = document.getElementById("webcam-body");
+  const btn = document.getElementById("capture-btn");
+  const btnTxt = document.getElementById("capture-btn-text");
+  modal.classList.add("open");
+  btn.disabled = true; btnTxt.textContent = "Chargement...";
+  body.innerHTML = '<div class="webcam-preview"><video id="cam-video" autoplay playsinline muted></video></div>';
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:640,height:480}})
+    .then(stream => {
+      mediaStream = stream;
+      const video = document.getElementById("cam-video");
+      video.srcObject = stream;
+      video.onloadedmetadata = () => { btn.disabled = false; btnTxt.textContent = "Prendre la photo"; };
+    })
+    .catch(() => {
+      body.innerHTML = '<div class="webcam-error">Impossible d\'accéder à la caméra.<br>Vérifiez les permissions du navigateur.</div>';
+      btn.disabled = true; btnTxt.textContent = "Caméra indisponible";
+    });
+}
+function closeWebcam() {
+  document.getElementById("webcam-modal").classList.remove("open");
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+  currentAction = null;
+}
+function startCapture() {
+  const btn = document.getElementById("capture-btn");
+  const btnTxt = document.getElementById("capture-btn-text");
+  const preview = document.querySelector(".webcam-preview");
+  btn.disabled = true;
+  let c = 3;
+  btnTxt.textContent = `${c}...`;
+  let ov = document.createElement("div"); ov.className = "countdown-overlay";
+  ov.innerHTML = `<span class="countdown-num">${c}</span>`; preview.appendChild(ov);
+  const iv = setInterval(() => {
+    c--;
+    if (c > 0) { btnTxt.textContent = `${c}...`; ov.innerHTML = `<span class="countdown-num">${c}</span>`; }
+    else {
+      clearInterval(iv); ov.remove();
+      const flash = document.createElement("div"); flash.className = "flash-overlay";
+      preview.appendChild(flash); setTimeout(() => flash.remove(), 300);
+      const video = document.getElementById("cam-video");
+      const canvas = document.getElementById("snap-canvas");
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+      document.getElementById("webcam-modal").classList.remove("open");
+      doPunch(currentAction, dataUrl);
+      currentAction = null;
+    }
+  }, 1000);
+}
+
+async function doPunch(action, photo) {
+  try {
+    await api("/api/badges/punch", {method:"POST", body:{action, photo}});
+    toast(`Badge ${action === "arrival" ? "d'arrivée" : action === "departure" ? "de départ" : action === "breakStart" ? "début de pause" : "fin de pause"} enregistré`);
+    render();
+  } catch(e) { toast(e.message, "error"); }
+}
+
+// ═══════════════════════════════════════════
+// LIGHTBOX
+// ═══════════════════════════════════════════
+function openLightbox(src) { document.getElementById("lightbox-img").src = src; document.getElementById("lightbox").classList.add("open"); }
+function closeLightbox() { document.getElementById("lightbox").classList.remove("open"); }
+
+// ═══════════════════════════════════════════
+// RENDER ROUTER
+// ═══════════════════════════════════════════
+async function render() {
+  const el = document.getElementById("app-content");
+  if (!user) return;
+  el.innerHTML = '<div class="page-spinner"><div class="spinner"></div></div>';
+  try {
+    if (user.role === "admin") {
+      if (adminPage === "dashboard") await renderAdminDashboard(el);
+      else if (adminPage === "employees") await renderAdminEmployees(el);
+      else if (adminPage === "employee-detail") await renderAdminDetail(el);
+    } else {
+      await renderEmployee(el);
+    }
+  } catch(e) { el.innerHTML = `<div style="text-align:center;padding:60px;color:var(--danger)">${e.message}</div>`; }
+}
+
+function setAdminPage(page) { adminPage = page; render(); }
+function setPeriod(p) { viewPeriod = p; render(); }
+function goToDetail(empId) { selectedEmpId = empId; adminPage = "employee-detail"; viewPeriod = "week"; render(); }
+
+// ═══════════════════════════════════════════
+// ADMIN NAV
+// ═══════════════════════════════════════════
+function adminNav() {
+  return `<div class="nav-tabs">
+    <button class="nav-tab ${adminPage==="dashboard"?"active":""}" onclick="setAdminPage('dashboard')">Tableau de bord</button>
+    <button class="nav-tab ${adminPage==="employees"?"active":""}" onclick="setAdminPage('employees')">Employés</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// BARS + PERIOD + TABLE HELPERS
+// ═══════════════════════════════════════════
+function barsHTML(data) {
+  const max = Math.max(...data.map(d=>d.value),1);
+  return `<div class="mini-bars">${data.map(d =>
+    `<div class="mini-bar"><div class="bar${d.isToday?" today":""}" style="height:${Math.max(4,(d.value/max)*52)}px"></div><span class="lbl">${d.label}</span></div>`
+  ).join("")}</div>`;
+}
+function periodTabs() {
+  return `<div class="tabs">${["day","week","month"].map(p =>
+    `<button class="tab ${viewPeriod===p?"active":""}" onclick="setPeriod('${p}')">${p==="day"?"Jour":p==="week"?"Semaine":"Mois"}</button>`
+  ).join("")}</div>`;
+}
+
+const WEEKDAYS_FR = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+function historyTable(badges, showPhoto) {
+  const rows = badges.map(b => {
+    const d = new Date(b.date); const wday = WEEKDAYS_FR[d.getDay()];
+    let mins = null;
+    if (b.arrival && b.departure) {
+      const [ah,am] = b.arrival.split(":").map(Number), [dh,dm] = b.departure.split(":").map(Number);
+      mins = (dh*60+dm)-(ah*60+am);
+      if (b.breakStart && b.breakEnd) {
+        const [bsh,bsm]=b.breakStart.split(":").map(Number),[beh,bem]=b.breakEnd.split(":").map(Number);
+        mins -= (beh*60+bem)-(bsh*60+bsm);
+      }
+    }
+    const cls = mins !== null && mins >= 420 ? "text-success" : mins !== null ? "text-warning" : "text-muted";
+    const brk = b.breakStart && b.breakEnd ? `${b.breakStart} → ${b.breakEnd}` : b.breakStart ? `${b.breakStart} → ...` : "—";
+    let photoCells = "";
+    if (showPhoto) {
+      const imgs = [];
+      if (b.photoArrival) imgs.push(`<img src="${b.photoArrival}" onclick="event.stopPropagation();openLightbox('${b.photoArrival}')">`);
+      if (b.photoDeparture) imgs.push(`<img src="${b.photoDeparture}" onclick="event.stopPropagation();openLightbox('${b.photoDeparture}')">`);
+      photoCells = `<td><div class="td-photo">${imgs.length?imgs.join(""):'<span class="text-muted">—</span>'}</div></td>`;
+    }
+    return `<tr>
+      <td class="fw600">${wday} ${d.getDate()}/${d.getMonth()+1}</td>
+      <td>${b.arrival||"—"}</td><td class="text-muted">${brk}</td><td>${b.departure||"—"}</td>
+      <td class="${cls}">${fmt(mins)}</td>${photoCells}
+    </tr>`;
+  }).join("");
+  return `<div class="card" style="overflow-x:auto"><h4>Historique</h4>
+    <table><thead><tr><th>Date</th><th>Arrivée</th><th>Pause</th><th>Départ</th><th>Total</th>${showPhoto?"<th>Photo</th>":""}</tr></thead>
+    <tbody>${rows||'<tr><td colspan="6" class="text-muted" style="text-align:center;padding:20px">Aucun enregistrement</td></tr>'}</tbody></table>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// EMPLOYEE VIEW
+// ═══════════════════════════════════════════
+async function renderEmployee(el) {
+  const [todayBadge, stats, badges] = await Promise.all([
+    api("/api/badges/today"),
+    api("/api/stats?period=" + viewPeriod),
+    api("/api/badges/history?period=month")
+  ]);
+  const b = todayBadge;
+  const status = !b || !b.arrival ? "absent" : b.departure ? "parti" : b.breakStart && !b.breakEnd ? "pause" : "présent";
+  const s = stats[viewPeriod] || {totalMinutes:0, daysWorked:0, avgMinutes:0};
+
+  const mkBadge = (icon, label, sub, color, action, disabled, active) =>
+    `<button class="badge-btn ${active?"active":""}" style="--c:${color}" ${disabled?"disabled":""} onclick="openWebcam('${action}')">
+      <span style="color:${color};display:flex">${icon}</span>
+      <span class="b-label">${label}</span><span class="b-sub">${sub}</span>
+    </button>`;
+
+  const iLogin = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>`;
+  const iCoffee = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg>`;
+  const iPlay = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`;
+  const iLogout = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>`;
+
+  el.innerHTML = `<div class="fade-up">
+    <h2 class="page-title">Bonjour, ${user.firstName}</h2>
+    <div class="page-sub">
+      <span class="status-dot" style="background:${statusColors[status]}"></span>
+      <span style="text-transform:capitalize">${status}</span>
+      ${b?.arrival ? `<span>· Arrivée à ${b.arrival}</span>` : ""}
+    </div>
+
+    <div class="badge-row">
+      ${mkBadge(iLogin,"Arrivée",b?.arrival||"—","var(--success)","arrival",!!b?.arrival,!!b?.arrival)}
+      ${mkBadge(iCoffee,"Début pause",b?.breakStart||"—","var(--warning)","breakStart",!b?.arrival||!!b?.breakStart,!!b?.breakStart&&!b?.breakEnd)}
+      ${mkBadge(iPlay,"Fin pause",b?.breakEnd||"—","var(--blue)","breakEnd",!b?.breakStart||!!b?.breakEnd,!!b?.breakEnd)}
+      ${mkBadge(iLogout,"Départ",b?.departure||"—","var(--danger)","departure",!b?.arrival||!!b?.departure,!!b?.departure)}
+    </div>
+
+    ${periodTabs()}
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="top"><span class="s-label">Heures totales</span><span class="s-icon" style="color:var(--primary)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span></div><div class="s-value">${fmt(s.totalMinutes)}</div><div class="s-sub">${s.daysWorked} jour${s.daysWorked>1?"s":""} travaillé${s.daysWorked>1?"s":""}</div></div>
+      <div class="stat-card"><div class="top"><span class="s-label">Moyenne / jour</span><span class="s-icon" style="color:var(--success)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span></div><div class="s-value">${fmt(s.avgMinutes)}</div><div class="s-sub">heures effectives</div></div>
+      <div class="stat-card"><div class="top"><span class="s-label">Semaine</span><span class="s-icon" style="color:var(--warning)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span></div><div class="s-value">S${weekNum()}</div></div>
+    </div>
+
+    <div class="card"><h4>7 derniers jours</h4>${barsHTML(stats.weekChart||[])}</div>
+    ${historyTable(badges, false)}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// ADMIN DASHBOARD
+// ═══════════════════════════════════════════
+async function renderAdminDashboard(el) {
+  const data = await api("/api/dashboard");
+  const { team, summary } = data;
+  const rows = team.map(e => {
+    const thumb = e.todayPhoto ? `<img class="thumb" src="${e.todayPhoto}" onclick="event.stopPropagation();openLightbox('${e.todayPhoto}')">` : "";
+    return `<div class="team-row" onclick="goToDetail('${e.id}')">
+      <div class="avatar md">${e.avatar}</div>
+      <div class="info"><div class="name">${e.firstName} ${e.lastName}</div><div class="dept">${e.department}${e.role==="admin"?' · <span class="role-badge admin">Admin</span>':""}</div></div>
+      <div class="status"><span class="status-dot" style="background:${statusColors[e.status]}"></span><span style="color:${statusColors[e.status]}">${e.status}</span></div>
+      <div class="hours"><div class="val">${fmt(e.weekMinutes)}</div><div class="lbl">cette semaine</div></div>
+      ${thumb}
+    </div>`;
+  }).join("");
+
+  el.innerHTML = `<div class="fade-up">
+    ${adminNav()}
+    <h2 class="page-title" style="margin-bottom:24px">Tableau de bord</h2>
+    <div class="stats-row">
+      <div class="stat-card"><div class="top"><span class="s-label">Présents</span><span class="s-icon" style="color:var(--success)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span></div><div class="s-value">${summary.present}</div><div class="s-sub">sur ${summary.total} salariés</div></div>
+      <div class="stat-card"><div class="top"><span class="s-label">En pause</span><span class="s-icon" style="color:var(--warning)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg></span></div><div class="s-value">${summary.onBreak}</div></div>
+      <div class="stat-card"><div class="top"><span class="s-label">Absents</span><span class="s-icon" style="color:var(--danger)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 6L6 18M6 6l12 12"/></svg></span></div><div class="s-value">${summary.absent}</div></div>
+    </div>
+    <div class="card" style="overflow:visible"><h4>Équipe</h4><div class="team-list">${rows}</div></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// ADMIN EMPLOYEES LIST (CRUD)
+// ═══════════════════════════════════════════
+async function renderAdminEmployees(el) {
+  const employees = await api("/api/employees");
+  const rows = employees.map(e =>
+    `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:32px;height:32px;font-size:11px">${e.avatar}</div><span class="fw600">${e.firstName} ${e.lastName}</span></div></td>
+      <td>${e.code}</td><td>${e.department}</td><td>${e.position}</td>
+      <td><span class="role-badge ${e.role}">${e.role}</span></td>
+      <td><span class="status-dot" style="background:${e.isActive?"var(--success)":"var(--danger)"}"></span> ${e.isActive?"Actif":"Inactif"}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="icon-btn" onclick="openEditEmployee('${e.id}')" title="Modifier"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn" onclick="toggleEmployee('${e.id}',${e.isActive?0:1})" title="${e.isActive?"Désactiver":"Réactiver"}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${e.isActive?'<path d="M18 6L6 18M6 6l12 12"/>':'<path d="M20 6L9 17l-5-5"/>'}</svg></button>
+        </div>
+      </td>
+    </tr>`
+  ).join("");
+
+  el.innerHTML = `<div class="fade-up">
+    ${adminNav()}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <h2 class="page-title" style="margin:0">Gestion des employés</h2>
+      <button class="btn btn-primary" onclick="openNewEmployee()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Nouvel employé
+      </button>
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Nom</th><th>Code</th><th>Département</th><th>Poste</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// EMPLOYEE MODAL (Create / Edit)
+// ═══════════════════════════════════════════
+function openNewEmployee() {
+  document.getElementById("emp-modal-title").textContent = "Nouvel employé";
+  document.getElementById("emp-modal-body").innerHTML = employeeForm({});
+  document.getElementById("employee-modal").classList.add("open");
+}
+async function openEditEmployee(empId) {
+  const employees = await api("/api/employees");
+  const emp = employees.find(e => e.id === empId);
+  if (!emp) return;
+  document.getElementById("emp-modal-title").textContent = "Modifier l'employé";
+  document.getElementById("emp-modal-body").innerHTML = employeeForm(emp);
+  document.getElementById("employee-modal").classList.add("open");
+}
+function closeEmployeeModal() { document.getElementById("employee-modal").classList.remove("open"); }
+
+function employeeForm(emp) {
+  const isEdit = !!emp.id;
+  return `
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Prénom *</label><input id="ef-fn" class="form-input" value="${emp.firstName||""}" placeholder="Jean"></div>
+      <div class="form-group"><label class="form-label">Nom *</label><input id="ef-ln" class="form-input" value="${emp.lastName||""}" placeholder="Dupont"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Code employé *</label><input id="ef-code" class="form-input" value="${emp.code||""}" placeholder="E005" ${isEdit?"disabled":""}></div>
+      <div class="form-group"><label class="form-label">${isEdit?"Nouveau PIN (laisser vide)":"PIN *"}</label><input id="ef-pin" class="form-input pin" type="password" maxlength="4" placeholder="••••"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Email</label><input id="ef-email" class="form-input" type="email" value="${emp.email||""}" placeholder="jean@entreprise.com"></div>
+      <div class="form-group"><label class="form-label">Rôle</label>
+        <select id="ef-role" class="form-select"><option value="employee" ${emp.role==="employee"?"selected":""}>Employé</option><option value="admin" ${emp.role==="admin"?"selected":""}>Administrateur</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Département</label><input id="ef-dept" class="form-input" value="${emp.department||""}" placeholder="Engineering"></div>
+      <div class="form-group"><label class="form-label">Poste</label><input id="ef-pos" class="form-input" value="${emp.position||""}" placeholder="Développeur"></div>
+    </div>
+    <div id="ef-error" class="form-error" style="margin-top:8px"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeEmployeeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEmployee('${emp.id||""}')">${isEdit?"Enregistrer":"Créer l'employé"}</button>
+    </div>`;
+}
+
+async function saveEmployee(empId) {
+  const body = {
+    firstName: document.getElementById("ef-fn").value.trim(),
+    lastName: document.getElementById("ef-ln").value.trim(),
+    code: document.getElementById("ef-code").value.trim().toUpperCase(),
+    email: document.getElementById("ef-email").value.trim(),
+    department: document.getElementById("ef-dept").value.trim(),
+    position: document.getElementById("ef-pos").value.trim(),
+    role: document.getElementById("ef-role").value,
+  };
+  const pin = document.getElementById("ef-pin").value;
+  if (pin) body.pin = pin;
+  const errEl = document.getElementById("ef-error");
+
+  if (!body.firstName || !body.lastName || !body.code) {
+    errEl.textContent = "Prénom, nom et code sont requis"; errEl.style.display = "block"; return;
+  }
+  if (!empId && !pin) {
+    errEl.textContent = "Le PIN est requis pour un nouvel employé"; errEl.style.display = "block"; return;
+  }
+  try {
+    if (empId) await api(`/api/employees/${empId}`, {method:"PUT", body});
+    else await api("/api/employees", {method:"POST", body});
+    closeEmployeeModal();
+    toast(empId ? "Employé mis à jour" : "Employé créé");
+    render();
+  } catch(e) { errEl.textContent = e.message; errEl.style.display = "block"; }
+}
+
+async function toggleEmployee(empId, activate) {
+  if (!activate && !confirm("Désactiver cet employé ?")) return;
+  try {
+    await api(`/api/employees/${empId}`, {method:"PUT", body:{isActive: !!activate}});
+    toast(activate ? "Employé réactivé" : "Employé désactivé");
+    render();
+  } catch(e) { toast(e.message, "error"); }
+}
+
+// ═══════════════════════════════════════════
+// ADMIN EMPLOYEE DETAIL
+// ═══════════════════════════════════════════
+async function renderAdminDetail(el) {
+  const employees = await api("/api/employees");
+  const emp = employees.find(e => e.id === selectedEmpId);
+  if (!emp) { adminPage = "dashboard"; render(); return; }
+  const [stats, badges] = await Promise.all([
+    api(`/api/stats?employee_id=${emp.id}`),
+    api(`/api/badges/history?employee_id=${emp.id}&period=month`)
+  ]);
+  const s = stats[viewPeriod] || {totalMinutes:0,daysWorked:0,avgMinutes:0};
+
+  el.innerHTML = `<div class="fade-up">
+    ${adminNav()}
+    <button class="btn-back" onclick="setAdminPage('dashboard')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Retour
+    </button>
+    <div class="emp-header">
+      <div class="avatar lg">${emp.avatar}</div>
+      <div class="meta"><h2 class="page-title">${emp.firstName} ${emp.lastName}</h2><p>${emp.department} · ${emp.code} · ${emp.position}</p></div>
+    </div>
+    ${periodTabs()}
+    <div class="stats-row">
+      <div class="stat-card"><div class="top"><span class="s-label">Heures totales</span><span class="s-icon" style="color:var(--primary)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span></div><div class="s-value">${fmt(s.totalMinutes)}</div><div class="s-sub">${s.daysWorked} jours</div></div>
+      <div class="stat-card"><div class="top"><span class="s-label">Moyenne / jour</span><span class="s-icon" style="color:var(--success)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span></div><div class="s-value">${fmt(s.avgMinutes)}</div></div>
+    </div>
+    <div class="card"><h4>7 derniers jours</h4>${barsHTML(stats.weekChart||[])}</div>
+    ${historyTable(badges, true)}
+  </div>`;
+}
+
+</script>
+</body>
+</html>
