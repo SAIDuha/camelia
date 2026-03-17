@@ -410,7 +410,7 @@ footer .copy{font-size:12px;color:var(--text-tertiary)}
         <li class="disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>Export Excel/PDF</li>
         <li class="disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>Analytics avancés</li>
       </ul>
-      <a href="#" class="btn btn-outline btn-pricing">Commencer</a>
+      <a href="/app" class="btn btn-outline btn-pricing">Commencer gratuitement</a>
     </div>
 
     <!-- PRO -->
@@ -428,7 +428,7 @@ footer .copy{font-size:12px;color:var(--text-tertiary)}
         <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><strong>Analytics avancés</strong></li>
         <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Support prioritaire</li>
       </ul>
-      <a href="#" class="btn btn-primary btn-pricing featured">Essai gratuit 14 jours</a>
+      <a href="/app" class="btn btn-primary btn-pricing featured">Essai gratuit 14 jours</a>
     </div>
 
     <!-- ENTERPRISE -->
@@ -446,7 +446,7 @@ footer .copy{font-size:12px;color:var(--text-tertiary)}
         <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Account manager dédié</li>
         <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>SLA 99.9%</li>
       </ul>
-      <a href="#" class="btn btn-outline btn-pricing">Nous contacter</a>
+      <a href="#" onclick="openContact();return false" class="btn btn-outline btn-pricing">Nous contacter</a>
     </div>
   </div>
 </section>
@@ -520,7 +520,7 @@ footer .copy{font-size:12px;color:var(--text-tertiary)}
   <h2 class="reveal">Prêt à moderniser <em>votre pointage</em> ?</h2>
   <p class="reveal reveal-delay-1">Rejoignez les 180+ entreprises qui ont déjà choisi Camélia. Essai gratuit, sans engagement.</p>
   <div class="reveal reveal-delay-2">
-    <a href="#pricing" class="btn btn-primary btn-lg" style="background:#fff;color:var(--rose)">
+    <a href="/app" class="btn btn-primary btn-lg" style="background:#fff;color:var(--rose)">
       Démarrer l'essai gratuit
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
@@ -593,5 +593,88 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 </script>
+<!-- ══════════ CONTACT MODAL ══════════ -->
+<div id="contact-modal" style="display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(8px)" onclick="if(event.target===this)closeContact()">
+  <div style="background:var(--bg);border-radius:24px;padding:36px;max-width:480px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.15);position:relative;animation:fadeUp .3s ease">
+    <button onclick="closeContact()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px;line-height:1">✕</button>
+    <h3 style="font-family:var(--font-display);font-size:24px;margin-bottom:6px">Contactez-nous</h3>
+    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px;line-height:1.5">Vous souhaitez en savoir plus sur le plan Enterprise ou avez une question ? Remplissez le formulaire et nous vous recontacterons sous 24h.</p>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Nom complet *</label>
+      <input id="ct-name" type="text" placeholder="Jean Dupont" style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Email *</label>
+      <input id="ct-email" type="email" placeholder="vous@entreprise.com" style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Entreprise</label>
+      <input id="ct-company" type="text" placeholder="Nom de votre entreprise" style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Nombre d'employés</label>
+      <select id="ct-size" style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:14px;font-family:var(--font-body);color:var(--text);outline:none;cursor:pointer">
+        <option value="">Sélectionnez</option>
+        <option value="1-10">1 - 10</option>
+        <option value="11-50">11 - 50</option>
+        <option value="51-200">51 - 200</option>
+        <option value="200+">200+</option>
+      </select>
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Message</label>
+      <textarea id="ct-message" rows="3" placeholder="Décrivez votre besoin..." style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none;resize:vertical"></textarea>
+    </div>
+    <div id="ct-error" style="color:#d94848;font-size:13px;margin-bottom:10px;display:none"></div>
+    <button id="ct-btn" onclick="submitContact()" style="width:100%;padding:14px;border:none;border-radius:12px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:opacity .2s">Envoyer</button>
+  </div>
+</div>
+
+<div id="ct-toast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:3000;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:500;color:#fff;background:#3aab6d;box-shadow:0 8px 30px rgba(0,0,0,.2);font-family:var(--font-body)"></div>
+
+<script>
+function openContact() {
+  document.getElementById('contact-modal').style.display = 'flex';
+}
+function closeContact() {
+  document.getElementById('contact-modal').style.display = 'none';
+}
+async function submitContact() {
+  const name = document.getElementById('ct-name').value.trim();
+  const email = document.getElementById('ct-email').value.trim();
+  const company = document.getElementById('ct-company').value.trim();
+  const size = document.getElementById('ct-size').value;
+  const message = document.getElementById('ct-message').value.trim();
+  const err = document.getElementById('ct-error');
+  const btn = document.getElementById('ct-btn');
+
+  err.style.display = 'none';
+  if (!name || !email) { err.textContent = 'Nom et email sont requis'; err.style.display = 'block'; return; }
+  if (!email.includes('@')) { err.textContent = 'Email invalide'; err.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Envoi...';
+  try {
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, email, company, size, message})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur');
+    closeContact();
+    document.getElementById('ct-name').value = '';
+    document.getElementById('ct-email').value = '';
+    document.getElementById('ct-company').value = '';
+    document.getElementById('ct-size').value = '';
+    document.getElementById('ct-message').value = '';
+    const toast = document.getElementById('ct-toast');
+    toast.textContent = 'Message envoyé ! Nous vous recontacterons sous 24h.';
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 4000);
+  } catch(e) { err.textContent = e.message; err.style.display = 'block'; }
+  btn.disabled = false; btn.textContent = 'Envoyer';
+}
+</script>
+
 </body>
 </html>

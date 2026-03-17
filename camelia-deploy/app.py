@@ -508,9 +508,9 @@ def api_plan():
 
 
 # ═══════════════════════════════════════════
-# INVITATIONS TABLE MIGRATION
+# MIGRATIONS
 # ═══════════════════════════════════════════
-def migrate_invitations():
+def run_migrations():
     try:
         with get_db() as conn:
             ex("""CREATE TABLE IF NOT EXISTS invitations (
@@ -523,10 +523,36 @@ def migrate_invitations():
                 used BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT NOW()
             )""", (), conn)
+            ex("""CREATE TABLE IF NOT EXISTS contact_requests (
+                id VARCHAR(64) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                company VARCHAR(255) DEFAULT '',
+                size VARCHAR(20) DEFAULT '',
+                message TEXT DEFAULT '',
+                read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )""", (), conn)
     except Exception as e:
-        print(f"[Migration invitations] {e}")
+        print(f"[Migration] {e}")
 
-migrate_invitations()
+run_migrations()
+
+# ═══════════════════════════════════════════
+# API — CONTACT FORM (public, no auth)
+# ═══════════════════════════════════════════
+@app.route('/api/contact', methods=['POST'])
+def api_contact():
+    data = request.json or {}
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip().lower()
+    if not name or not email:
+        return jsonify({"error": "Nom et email requis"}), 400
+    contact_id = str(uuid.uuid4())
+    with get_db() as conn:
+        ex(f"INSERT INTO contact_requests (id,name,email,company,size,message) VALUES ({PH},{PH},{PH},{PH},{PH},{PH})",
+           (contact_id, name, email, data.get('company',''), data.get('size',''), data.get('message','')), conn)
+    return jsonify({"message": "Message reçu"}), 201
 
 # ═══════════════════════════════════════════
 # JOIN PAGE (employee clicks invite link)

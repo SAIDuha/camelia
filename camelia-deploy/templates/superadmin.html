@@ -99,6 +99,10 @@ tr:hover{background:#ffffff08}
       <tbody id="sa-tbody"></tbody>
     </table>
   </div>
+  <div class="sa-table-wrap" style="margin-top:24px">
+    <h3>Demandes de contact <span id="contact-count" style="font-size:13px;color:var(--primary);font-weight:400"></span></h3>
+    <div id="sa-contacts"></div>
+  </div>
 </div>
 
 <div id="sa-toast" class="toast"></div>
@@ -186,6 +190,36 @@ async function loadDashboard() {
       </tr>`;
     }).join('');
 
+    // Load contacts
+    try {
+      const contacts = await saApi("/api/superadmin/contacts");
+      const unread = contacts.filter(c => !c.read).length;
+      document.getElementById("contact-count").textContent = unread ? `(${unread} nouveau${unread>1?'x':''})` : '';
+      if (contacts.length === 0) {
+        document.getElementById("sa-contacts").innerHTML = '<p style="color:var(--muted);font-size:13px;padding:12px 0">Aucune demande de contact.</p>';
+      } else {
+        document.getElementById("sa-contacts").innerHTML = contacts.map(c => {
+          const d = c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-FR') : '';
+          return `<div style="padding:14px 0;border-bottom:1px solid var(--border);${!c.read?'background:var(--input-bg);margin:0 -20px;padding:14px 20px;border-radius:8px;margin-bottom:4px':''}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div>
+                <strong style="font-size:14px">${c.name}</strong>
+                <span style="color:var(--muted);font-size:13px;margin-left:8px">${c.email}</span>
+                ${c.company ? '<span style="color:var(--muted);font-size:12px;margin-left:8px">· '+c.company+'</span>' : ''}
+                ${c.size ? '<span style="color:var(--primary);font-size:11px;margin-left:6px;background:var(--primary);background:rgba(199,125,186,.15);padding:2px 8px;border-radius:4px">'+c.size+' emp.</span>' : ''}
+              </div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span style="font-size:11px;color:var(--muted)">${d}</span>
+                ${!c.read ? '<button class="toggle-btn" onclick="markRead(\''+c.id+'\')">Lu</button>' : ''}
+                <button class="toggle-btn" onclick="deleteContact('${c.id}')" style="border-color:var(--danger);color:var(--danger)">Suppr</button>
+              </div>
+            </div>
+            ${c.message ? '<p style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5">'+c.message+'</p>' : ''}
+          </div>`;
+        }).join('');
+      }
+    } catch(e) { console.log('Contacts not loaded:', e); }
+
   } catch(e) { saToast(e.message, "error"); }
 }
 
@@ -201,6 +235,21 @@ async function toggleCompany(companyId) {
   try {
     const res = await saApi(`/api/superadmin/companies/${companyId}/toggle`, {method:"PUT"});
     saToast(res.isActive ? "Entreprise activée" : "Entreprise désactivée");
+    loadDashboard();
+  } catch(e) { saToast(e.message, "error"); }
+}
+
+async function markRead(contactId) {
+  try {
+    await saApi(`/api/superadmin/contacts/${contactId}/read`, {method:"PUT"});
+    loadDashboard();
+  } catch(e) { saToast(e.message, "error"); }
+}
+
+async function deleteContact(contactId) {
+  try {
+    await saApi(`/api/superadmin/contacts/${contactId}`, {method:"DELETE"});
+    saToast("Contact supprimé");
     loadDashboard();
   } catch(e) { saToast(e.message, "error"); }
 }

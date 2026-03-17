@@ -116,3 +116,33 @@ def superadmin_stats():
         "totalBadges": total_badges['c'] if total_badges else 0,
         "planBreakdown": plan_counts,
     })
+
+# ── Contact requests ──
+@superadmin_bp.route('/api/superadmin/contacts')
+@superadmin_required
+def list_contacts():
+    with get_db() as conn:
+        try:
+            contacts = q("SELECT * FROM contact_requests ORDER BY created_at DESC", (), conn)
+        except:
+            contacts = []
+    return jsonify([{
+        "id": c['id'], "name": c['name'], "email": c['email'],
+        "company": c.get('company', ''), "size": c.get('size', ''),
+        "message": c.get('message', ''), "read": bool(c.get('read', False)),
+        "createdAt": str(c.get('created_at', '')),
+    } for c in contacts])
+
+@superadmin_bp.route('/api/superadmin/contacts/<contact_id>/read', methods=['PUT'])
+@superadmin_required
+def mark_contact_read(contact_id):
+    with get_db() as conn:
+        ex(f"UPDATE contact_requests SET read=TRUE WHERE id={PH}", (contact_id,), conn)
+    return jsonify({"message": "Marqué comme lu"})
+
+@superadmin_bp.route('/api/superadmin/contacts/<contact_id>', methods=['DELETE'])
+@superadmin_required
+def delete_contact(contact_id):
+    with get_db() as conn:
+        ex(f"DELETE FROM contact_requests WHERE id={PH}", (contact_id,), conn)
+    return jsonify({"message": "Supprimé"})
