@@ -1,6 +1,7 @@
-import os, uuid, base64, secrets, re
+import os, uuid, base64, secrets, re, smtplib
 from datetime import datetime, date, timedelta
 from functools import wraps
+from email.message import EmailMessage
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify, render_template, session, send_from_directory
 
@@ -13,6 +14,15 @@ app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_PATH', os.path.join(os.path.dirname(__file__), 'static', 'uploads'))
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 APP_URL = os.environ.get('APP_URL', 'https://camelia-02uo.onrender.com')
+
+# ═══════════════════════════════════════════
+# EMAIL CONFIG
+# ═══════════════════════════════════════════
+SMTP_HOST = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
+SMTP_USER = os.environ.get('SMTP_USER', '')
+SMTP_PASS = os.environ.get('SMTP_PASS', '')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', '')  # ton email pour recevoir les notifs
 
 PLAN_LIMITS = {
     'starter':    {'max_employees': 10,  'max_admins': 1,  'history_days': 30,  'export': False, 'analytics': False},
@@ -539,6 +549,94 @@ def run_migrations():
 run_migrations()
 
 # ═══════════════════════════════════════════
+# EMAIL HELPERS
+# ═══════════════════════════════════════════
+def send_email(to, subject, text_body, html_body=None):
+    if not SMTP_USER or not SMTP_PASS:
+        print(f"[WARN] SMTP non configuré, email non envoyé à {to}")
+        return False
+    try:
+        msg = EmailMessage()
+        msg["From"] = SMTP_USER
+        msg["To"] = to
+        msg["Subject"] = subject
+        msg.set_content(text_body)
+        if html_body:
+            msg.add_alternative(html_body, subtype="html")
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+        print(f"[EMAIL] Envoyé à {to}")
+        return True
+    except Exception as e:
+        print(f"[EMAIL ERROR] {e}")
+        return False
+
+def build_confirmation_html(name):
+    return f"""<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f7f5f2;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellspacing="0" cellpadding="0" style="background:#f7f5f2;padding:40px 0;">
+<tr><td align="center">
+<table width="560" cellspacing="0" cellpadding="0" style="max-width:560px;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+  <tr><td style="background:linear-gradient(135deg,#b5577a,#c77dba);padding:36px 40px;text-align:center;">
+    <span style="font-size:36px;">🌸</span><br/>
+    <span style="font-size:24px;font-weight:700;color:#fff;letter-spacing:1px;">CAMÉLIA</span><br/>
+    <span style="font-size:12px;color:rgba(255,255,255,.7);letter-spacing:2px;">SYSTÈME DE POINTAGE</span>
+  </td></tr>
+  <tr><td style="background:#fff;padding:40px;">
+    <h1 style="font-size:22px;color:#2c2825;margin:0 0 16px;">Merci {name} !</h1>
+    <p style="font-size:15px;color:#6b635b;line-height:1.7;margin:0 0 24px;">
+      Nous avons bien reçu votre message. Notre équipe vous recontactera <strong style="color:#b5577a;">dans les 24 heures</strong>.
+    </p>
+    <table width="100%" cellspacing="0" cellpadding="0" style="background:#f7f5f2;border-radius:12px;border-left:4px solid #b5577a;">
+      <tr><td style="padding:20px 24px;">
+        <p style="font-size:13px;color:#9a938c;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;">En attendant</p>
+        <p style="font-size:14px;color:#2c2825;margin:0;line-height:1.6;">
+          Vous pouvez déjà créer votre compte gratuitement et commencer à utiliser Camélia pour votre équipe.
+        </p>
+      </td></tr>
+    </table>
+    <div style="text-align:center;margin-top:28px;">
+      <a href="{APP_URL}/app" style="display:inline-block;padding:14px 32px;background:#b5577a;color:#fff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">
+        Créer mon compte gratuitement
+      </a>
+    </div>
+  </td></tr>
+  <tr><td style="background:#2c2825;padding:24px;text-align:center;">
+    <span style="font-size:13px;color:#9a938c;">Camélia — Système de pointage intelligent</span><br/>
+    <span style="font-size:11px;color:#6b635b;">Ceci est un message automatique. Merci de ne pas y répondre.</span>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>"""
+
+def build_admin_notif_html(name, email, company, size, message):
+    return f"""<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#0f1117;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellspacing="0" cellpadding="0" style="background:#0f1117;padding:40px 0;">
+<tr><td align="center">
+<table width="560" cellspacing="0" cellpadding="0" style="max-width:560px;width:100%;border-radius:16px;overflow:hidden;">
+  <tr><td style="background:#1a1d27;border:1px solid #2a2d3a;border-radius:16px;padding:32px;">
+    <h2 style="color:#c77dba;margin:0 0 4px;font-size:14px;text-transform:uppercase;letter-spacing:2px;">🌸 Nouveau lead Camélia</h2>
+    <h1 style="color:#e8e9ed;margin:0 0 24px;font-size:22px;">{name}</h1>
+    <table width="100%" cellspacing="0" cellpadding="0" style="font-size:14px;">
+      <tr><td style="color:#7a7d8e;padding:8px 0;width:100px;">Email</td><td style="color:#e8e9ed;padding:8px 0;"><a href="mailto:{email}" style="color:#c77dba;">{email}</a></td></tr>
+      <tr><td style="color:#7a7d8e;padding:8px 0;">Entreprise</td><td style="color:#e8e9ed;padding:8px 0;">{company or '—'}</td></tr>
+      <tr><td style="color:#7a7d8e;padding:8px 0;">Taille</td><td style="color:#e8e9ed;padding:8px 0;">{size or '—'}</td></tr>
+    </table>
+    {f'<div style="margin-top:20px;padding:16px;background:#0f1117;border-radius:10px;border:1px solid #2a2d3a;"><p style="color:#7a7d8e;font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:1px;">Message</p><p style="color:#e8e9ed;font-size:14px;margin:0;line-height:1.6;">{message}</p></div>' if message else ''}
+    <div style="margin-top:24px;text-align:center;">
+      <a href="{APP_URL}/superadmin" style="display:inline-block;padding:12px 28px;background:#c77dba;color:#fff;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;">Voir dans le Super Admin</a>
+    </div>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>"""
+
+# ═══════════════════════════════════════════
 # API — CONTACT FORM (public, no auth)
 # ═══════════════════════════════════════════
 @app.route('/api/contact', methods=['POST'])
@@ -546,12 +644,35 @@ def api_contact():
     data = request.json or {}
     name = data.get('name', '').strip()
     email = data.get('email', '').strip().lower()
+    company = data.get('company', '').strip()
+    size = data.get('size', '').strip()
+    message = data.get('message', '').strip()
     if not name or not email:
         return jsonify({"error": "Nom et email requis"}), 400
+
+    # Save to DB
     contact_id = str(uuid.uuid4())
     with get_db() as conn:
         ex(f"INSERT INTO contact_requests (id,name,email,company,size,message) VALUES ({PH},{PH},{PH},{PH},{PH},{PH})",
-           (contact_id, name, email, data.get('company',''), data.get('size',''), data.get('message','')), conn)
+           (contact_id, name, email, company, size, message), conn)
+
+    # Email de confirmation au client
+    send_email(
+        to=email,
+        subject=f"🌸 Merci {name.split()[0]} ! Votre demande a bien été reçue — Camélia",
+        text_body=f"Bonjour {name},\n\nMerci pour votre message. Notre équipe vous recontactera dans les 24 heures.\n\nCordialement,\nL'équipe Camélia",
+        html_body=build_confirmation_html(name.split()[0])
+    )
+
+    # Notification à l'admin (toi)
+    if ADMIN_EMAIL:
+        send_email(
+            to=ADMIN_EMAIL,
+            subject=f"🌸 Nouveau lead : {name} — {company or 'Pas d entreprise'}",
+            text_body=f"Nouveau contact:\n\nNom: {name}\nEmail: {email}\nEntreprise: {company}\nTaille: {size}\nMessage: {message}",
+            html_body=build_admin_notif_html(name, email, company, size, message)
+        )
+
     return jsonify({"message": "Message reçu"}), 201
 
 # ═══════════════════════════════════════════
