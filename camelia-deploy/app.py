@@ -137,7 +137,11 @@ def admin_required(f):
 # ROUTES - PAGES
 # ═══════════════════════════════════════════
 @app.route('/')
-def index():
+def landing():
+    return render_template('landing.html')
+
+@app.route('/app')
+def dashboard():
     return render_template('index.html')
 
 @app.route('/static/uploads/<path:filename>')
