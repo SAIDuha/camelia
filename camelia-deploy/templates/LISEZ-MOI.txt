@@ -1,0 +1,18 @@
+COMMENT INSTALLER - PHASE 3
+============================
+
+Dans ton dossier camelia-deploy/ :
+
+1. Remplace app.py                  (le fichier qui est deja la)
+2. Remplace superadmin_routes.py    (le fichier qui est deja la)
+3. Remplace templates/index.html    (le fichier qui est deja la)
+4. Remplace templates/superadmin.html (le fichier qui est deja la)
+5. AJOUTE  templates/join.html      (NOUVEAU fichier)
+
+Ensuite :
+- GitHub Desktop → commit "Phase 3 invitations" → Push origin
+
+Sur Render → Environment → ajoute :
+- APP_URL = https://camelia-02uo.onrender.com
+
+C'est tout. Rien d'autre a faire.

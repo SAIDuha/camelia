@@ -9,8 +9,10 @@ from superadmin_routes import superadmin_bp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
+# Use Render Disk for persistent photo storage, fallback to local
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_PATH', os.path.join(os.path.dirname(__file__), 'static', 'uploads'))
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+APP_URL = os.environ.get('APP_URL', 'https://camelia-02uo.onrender.com')
 
 PLAN_LIMITS = {
     'starter':    {'max_employees': 10,  'max_admins': 1,  'history_days': 30,  'export': False, 'analytics': False},
@@ -503,6 +505,130 @@ def api_plan():
         "usage": {"employees": emp_count['c'] if emp_count else 0},
         "companySlug": co.get('slug', '')
     })
+
+
+# ═══════════════════════════════════════════
+# INVITATIONS TABLE MIGRATION
+# ═══════════════════════════════════════════
+def migrate_invitations():
+    try:
+        with get_db() as conn:
+            ex("""CREATE TABLE IF NOT EXISTS invitations (
+                id VARCHAR(64) PRIMARY KEY,
+                company_id VARCHAR(64) NOT NULL,
+                invite_code VARCHAR(64) UNIQUE NOT NULL,
+                role VARCHAR(20) DEFAULT 'employee',
+                department VARCHAR(100) DEFAULT '',
+                position VARCHAR(100) DEFAULT '',
+                used BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )""", (), conn)
+    except Exception as e:
+        print(f"[Migration invitations] {e}")
+
+migrate_invitations()
+
+# ═══════════════════════════════════════════
+# JOIN PAGE (employee clicks invite link)
+# ═══════════════════════════════════════════
+@app.route('/join/<invite_code>')
+def join_page(invite_code):
+    return render_template('join.html')
+
+# ═══════════════════════════════════════════
+# API — INVITATIONS
+# ═══════════════════════════════════════════
+@app.route('/api/invitations', methods=['GET'])
+@admin_required
+def list_invitations():
+    with get_db() as conn:
+        invites = q(f"SELECT * FROM invitations WHERE company_id={PH} ORDER BY created_at DESC",
+                    (session['company_id'],), conn)
+    return jsonify([{
+        "id": i['id'], "code": i['invite_code'],
+        "role": i['role'], "department": i['department'],
+        "position": i['position'], "used": bool(i['used']),
+        "link": f"{APP_URL}/join/{i['invite_code']}",
+        "createdAt": str(i.get('created_at', '')),
+    } for i in invites])
+
+@app.route('/api/invitations', methods=['POST'])
+@admin_required
+def create_invitation():
+    data = request.json or {}
+    invite_code = secrets.token_urlsafe(16)
+    invite_id = str(uuid.uuid4())
+    with get_db() as conn:
+        ex(f"INSERT INTO invitations (id,company_id,invite_code,role,department,position) VALUES ({PH},{PH},{PH},{PH},{PH},{PH})",
+           (invite_id, session['company_id'], invite_code,
+            data.get('role', 'employee'), data.get('department', ''), data.get('position', '')), conn)
+    link = f"{APP_URL}/join/{invite_code}"
+    return jsonify({"id": invite_id, "code": invite_code, "link": link, "message": "Invitation créée"}), 201
+
+@app.route('/api/invitations/<invite_id>', methods=['DELETE'])
+@admin_required
+def delete_invitation(invite_id):
+    with get_db() as conn:
+        ex(f"DELETE FROM invitations WHERE id={PH} AND company_id={PH}", (invite_id, session['company_id']), conn)
+    return jsonify({"message": "Invitation supprimée"})
+
+@app.route('/api/join/<invite_code>', methods=['GET'])
+def get_invite_info(invite_code):
+    with get_db() as conn:
+        invite = q1(f"SELECT i.*, c.name as company_name FROM invitations i JOIN companies c ON i.company_id=c.id WHERE i.invite_code={PH} AND i.used=FALSE",
+                    (invite_code,), conn)
+    if not invite:
+        return jsonify({"error": "Invitation invalide ou déjà utilisée"}), 404
+    return jsonify({
+        "companyName": invite['company_name'],
+        "role": invite['role'],
+        "department": invite['department'],
+        "position": invite['position'],
+    })
+
+@app.route('/api/join/<invite_code>', methods=['POST'])
+def accept_invitation(invite_code):
+    data = request.json or {}
+    for f in ['firstName', 'lastName', 'email', 'password']:
+        if not data.get(f, '').strip():
+            return jsonify({"error": f"Le champ {f} est requis"}), 400
+    if len(data['password']) < 6:
+        return jsonify({"error": "Mot de passe: 6 caractères minimum"}), 400
+
+    email = data['email'].strip().lower()
+    with get_db() as conn:
+        invite = q1(f"SELECT i.*, c.name as company_name FROM invitations i JOIN companies c ON i.company_id=c.id WHERE i.invite_code={PH} AND i.used=FALSE",
+                    (invite_code,), conn)
+        if not invite:
+            return jsonify({"error": "Invitation invalide ou déjà utilisée"}), 404
+
+        existing = q1(f"SELECT id FROM employees WHERE email={PH}", (email,), conn)
+        if existing:
+            return jsonify({"error": "Cet email est déjà utilisé"}), 409
+
+        # Auto-generate code
+        last = q1(f"SELECT employee_code FROM employees WHERE company_id={PH} ORDER BY employee_code DESC LIMIT 1",
+                  (invite['company_id'],), conn)
+        try: next_num = int(last['employee_code'][1:]) + 1 if last else 1
+        except: next_num = 1
+        code = f'E{next_num:03d}'
+
+        emp_id = str(uuid.uuid4())
+        ex(f"INSERT INTO employees (id,company_id,employee_code,first_name,last_name,email,department,position,password_hash,role) VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH})",
+           (emp_id, invite['company_id'], code, data['firstName'].strip(), data['lastName'].strip(),
+            email, invite['department'], invite['position'],
+            generate_password_hash(data['password']), invite['role']), conn)
+
+        ex(f"UPDATE invitations SET used=TRUE WHERE id={PH}", (invite['id'],), conn)
+
+    session['employee_id'] = emp_id
+    session['company_id'] = invite['company_id']
+    session['role'] = invite['role']
+
+    return jsonify({
+        "message": f"Bienvenue chez {invite['company_name']} !",
+        "redirect": "/app"
+    }), 201
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

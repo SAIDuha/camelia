@@ -1,0 +1,134 @@
+{% raw %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rejoindre — Camélia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f2;--card:#ffffff;--border:#e8e3dd;--text:#2c2825;--muted:#9a938c;--primary:#b5577a;--primary-light:#b5577a1a;--danger:#d94848;--success:#3aab6d;--input-bg:#f0ece7;--font-display:'Playfair Display',Georgia,serif;--font-body:'DM Sans','Segoe UI',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.container{max-width:440px;width:100%;animation:fadeUp .5s ease}
+.logo{text-align:center;margin-bottom:28px}
+.logo svg{color:var(--primary)}
+.logo h1{font-family:var(--font-display);font-size:32px;font-weight:800;margin-top:10px}
+.logo p{color:var(--muted);font-size:14px;margin-top:4px}
+.company-badge{text-align:center;margin-bottom:24px;padding:14px;background:var(--primary-light);border-radius:12px}
+.company-badge span{font-size:13px;color:var(--muted)}
+.company-badge strong{display:block;font-size:18px;margin-top:2px;color:var(--text)}
+.card{background:var(--card);border-radius:20px;padding:32px;border:1px solid var(--border);box-shadow:0 12px 40px rgba(0,0,0,.06)}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.form-input{width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--input-bg);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--primary)}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+.form-error{color:var(--danger);font-size:13px;margin-bottom:12px;display:none}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s}
+.btn:hover{opacity:.9}
+.btn:disabled{opacity:.4;cursor:default}
+.info{font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
+#loading{text-align:center;padding:40px;color:var(--muted)}
+#error-page{text-align:center;padding:40px;display:none}
+#error-page h2{font-family:var(--font-display);font-size:24px;margin-bottom:8px}
+#error-page p{color:var(--muted);margin-bottom:20px}
+#error-page a{color:var(--primary);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".3"/><path d="M12 2C9 2 9 5.5 12 7c3-1.5 3-5 0-5zM22 12c0-3-3.5-3-5 0 1.5 3 5 3 5 0zM12 22c3 0 3-3.5 0-5-3 1.5-3 5 0 5zM2 12c0 3 3.5 3 5 0-1.5-3-5-3-5 0z"/></svg>
+    <h1>Camélia</h1>
+    <p>Vous avez été invité à rejoindre</p>
+  </div>
+
+  <div id="loading">Chargement...</div>
+
+  <div id="error-page">
+    <h2>Invitation invalide</h2>
+    <p>Ce lien d'invitation est expiré ou a déjà été utilisé.</p>
+    <a href="/">Retour à l'accueil</a>
+  </div>
+
+  <div id="join-form" style="display:none">
+    <div class="company-badge" id="company-info"></div>
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Prénom</label><input id="j-fn" class="form-input" placeholder="Jean"></div>
+        <div class="form-group"><label class="form-label">Nom</label><input id="j-ln" class="form-input" placeholder="Dupont"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Email</label><input id="j-email" class="form-input" type="email" placeholder="vous@email.com"></div>
+      <div class="form-group"><label class="form-label">Mot de passe (6 car. min.)</label><input id="j-pass" class="form-input" type="password" placeholder="••••••••"></div>
+      <div id="j-error" class="form-error"></div>
+      <button class="btn" id="j-btn" onclick="doJoin()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+        Rejoindre l'équipe
+      </button>
+    </div>
+    <div class="info" id="role-info"></div>
+  </div>
+</div>
+
+<script>
+const inviteCode = window.location.pathname.split('/join/')[1];
+
+async function loadInvite() {
+  try {
+    const res = await fetch(`/api/join/${inviteCode}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('join-form').style.display = 'block';
+    document.getElementById('company-info').innerHTML = `<span>Vous rejoignez</span><strong>${data.companyName}</strong>`;
+
+    const roleLabel = data.role === 'admin' ? 'Administrateur' : 'Employé';
+    const parts = [];
+    if (data.department) parts.push(data.department);
+    if (data.position) parts.push(data.position);
+    document.getElementById('role-info').textContent = `${roleLabel}${parts.length ? ' · ' + parts.join(' · ') : ''}`;
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-page').style.display = 'block';
+  }
+}
+
+async function doJoin() {
+  const btn = document.getElementById('j-btn');
+  const err = document.getElementById('j-error');
+  err.style.display = 'none';
+  btn.disabled = true;
+
+  const body = {
+    firstName: document.getElementById('j-fn').value.trim(),
+    lastName: document.getElementById('j-ln').value.trim(),
+    email: document.getElementById('j-email').value.trim(),
+    password: document.getElementById('j-pass').value,
+  };
+
+  try {
+    const res = await fetch(`/api/join/${inviteCode}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    window.location.href = data.redirect || '/app';
+  } catch(e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+  btn.disabled = false;
+}
+
+document.getElementById('j-pass').addEventListener('keydown', e => { if(e.key==='Enter') doJoin(); });
+loadInvite();
+</script>
+</body>
+</html>
+{% endraw %}
