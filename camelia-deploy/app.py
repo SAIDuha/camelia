@@ -55,7 +55,7 @@ def landing():
 
 @app.route('/app')
 def dashboard():
-    return render_template('index.html')
+    return render_template('app.html')
 
 @app.route('/register')
 def register_page():
@@ -228,7 +228,7 @@ def api_employees():
 @admin_required
 def api_create_employee():
     data = request.json or {}
-    required = ['code', 'firstName', 'lastName', 'email', 'password']
+    required = ['firstName', 'lastName', 'email', 'password']
     for f in required:
         if not data.get(f):
             return jsonify({"error": f"Le champ {f} est requis"}), 400
