@@ -82,7 +82,7 @@ def api_register():
     if not first_name: errors.append("Prénom requis")
     if not last_name: errors.append("Nom requis")
     if not email or '@' not in email: errors.append("Email invalide")
-    if len(password) < 8: errors.append("Mot de passe : 8 caractères minimum")
+    if len(password) < 6: errors.append("Mot de passe : 6 caractères minimum")
     if errors:
         return jsonify({"error": " · ".join(errors)}), 400
 
@@ -240,11 +240,6 @@ def api_create_employee():
         if count and count['c'] >= limits['max_employees']:
             return jsonify({"error": f"Limite de {limits['max_employees']} employés atteinte. Changez de plan pour en ajouter plus."}), 403
 
-        existing = q1(f"SELECT id FROM employees WHERE company_id={PH} AND employee_code={PH}",
-                      (session['company_id'], data['code'].upper()), conn)
-        if existing:
-            return jsonify({"error": "Ce code employé existe déjà"}), 409
-
         existing_email = q1(f"SELECT id FROM employees WHERE email={PH}", (data['email'].lower(),), conn)
         if existing_email:
             return jsonify({"error": "Cet email est déjà utilisé"}), 409
@@ -255,13 +250,22 @@ def api_create_employee():
             if admin_count and admin_count['c'] >= limits['max_admins']:
                 return jsonify({"error": f"Limite de {limits['max_admins']} admin(s) atteinte pour votre plan."}), 403
 
+        # Auto-generate employee code
+        last = q1(f"SELECT employee_code FROM employees WHERE company_id={PH} ORDER BY employee_code DESC LIMIT 1",
+                  (session['company_id'],), conn)
+        try:
+            next_num = int(last['employee_code'][1:]) + 1 if last else 1
+        except:
+            next_num = 1
+        code = f'E{next_num:03d}'
+
         emp_id = str(uuid.uuid4())
         ex(f"INSERT INTO employees (id,company_id,employee_code,first_name,last_name,email,department,position,password_hash,role) VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH})",
-           (emp_id, session['company_id'], data['code'].upper(), data['firstName'], data['lastName'],
+           (emp_id, session['company_id'], code, data['firstName'], data['lastName'],
             data['email'].lower(), data.get('department',''), data.get('position',''),
             generate_password_hash(data['password']), data.get('role','employee')), conn)
 
-    return jsonify({"id": emp_id, "message": "Employé créé"}), 201
+    return jsonify({"id": emp_id, "code": code, "message": "Employé créé"}), 201
 
 @app.route('/api/employees/<emp_id>', methods=['PUT'])
 @admin_required
@@ -274,7 +278,7 @@ def api_update_employee(emp_id):
 
         fields, vals = [], []
         for k, col in [('firstName','first_name'),('lastName','last_name'),('email','email'),
-                        ('department','department'),('position','position'),('role','role'),('code','employee_code')]:
+                        ('department','department'),('position','position'),('role','role')]:
             if k in data:
                 fields.append(f"{col}={PH}"); vals.append(data[k])
         if 'password' in data and data['password']:
