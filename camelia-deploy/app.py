@@ -55,7 +55,7 @@ def landing():
 
 @app.route('/app')
 def dashboard():
-    return render_template('app.html')
+    return render_template('index.html')
 
 @app.route('/register')
 def register_page():
