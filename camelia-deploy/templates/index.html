@@ -256,6 +256,35 @@ tbody tr:hover{background:var(--primary-light)}
   </div>
 </div>
 
+<!-- ══════════ VERIFICATION SCREEN ══════════ -->
+<div id="verify-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px">
+  <div class="auth-box fade-up" style="max-width:420px">
+    <div style="text-align:center;margin-bottom:28px">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".3"/><path d="M12 2C9 2 9 5.5 12 7c3-1.5 3-5 0-5zM22 12c0-3-3.5-3-5 0 1.5 3 5 3 5 0zM12 22c3 0 3-3.5 0-5-3 1.5-3 5 0 5zM2 12c0 3 3.5 3 5 0-1.5-3-5-3-5 0z"/></svg>
+      <h2 style="font-family:var(--font-display);font-size:24px;margin-top:12px">Vérifiez votre email</h2>
+      <p style="color:var(--muted);font-size:14px;margin-top:6px;line-height:1.5">
+        Un code à 6 chiffres a été envoyé à<br/><strong id="verify-email-display" style="color:var(--primary)"></strong>
+      </p>
+    </div>
+    <div class="card" style="padding:28px">
+      <label class="form-label">Code de vérification</label>
+      <input id="verify-code" type="text" class="form-input" maxlength="6" placeholder="123456" style="text-align:center;font-size:28px;letter-spacing:10px;font-weight:700;font-family:monospace" autocomplete="one-time-code">
+      <div id="verify-error" class="form-error" style="display:none;color:var(--danger);font-size:13px;margin-top:8px"></div>
+      <button class="btn btn-primary btn-block" id="verify-btn" onclick="doVerify()" style="margin-top:16px">
+        Vérifier mon email
+      </button>
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <button class="btn-link" onclick="doResendCode()" id="resend-btn" style="font-size:13px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:var(--font-body)">
+          Renvoyer le code
+        </button>
+        <button class="btn-link" onclick="backToLogin()" style="font-size:13px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:var(--font-body)">
+          Retour
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ HEADER ══════════ -->
 <header class="header" id="app-header">
   <div class="logo">
@@ -399,8 +428,11 @@ async function doLogin() {
   const errEl = document.getElementById("login-error");
   const btn = document.getElementById("login-btn");
   errEl.style.display = "none"; btn.disabled = true;
-  try { enterApp(await api("/api/login",{method:"POST",body:{email,password}})); }
-  catch(e) { errEl.textContent = e.message; errEl.style.display = "block"; }
+  try {
+    const res = await api("/api/login",{method:"POST",body:{email,password}});
+    if (res.needsVerification) { showVerifyScreen(res.email || email); }
+    else { enterApp(res); }
+  } catch(e) { errEl.textContent = e.message; errEl.style.display = "block"; }
   btn.disabled = false;
 }
 async function doRegister() {
@@ -414,7 +446,8 @@ async function doRegister() {
       lastName:document.getElementById("reg-ln").value.trim(),
       email:document.getElementById("reg-email").value.trim(),
       password:document.getElementById("reg-password").value}});
-    toast("Entreprise creee !"); enterApp(data.user);
+    if (data.needsVerification) { toast("Vérifiez votre email !"); showVerifyScreen(data.user.email); }
+    else { toast("Entreprise creee !"); enterApp(data.user); }
   } catch(e) { errEl.textContent = e.message; errEl.style.display = "block"; }
   btn.disabled = false;
 }
@@ -422,6 +455,7 @@ async function doLogout() {
   await api("/api/logout",{method:"POST"}).catch(()=>{});
   user = null; adminPage = "dashboard"; selectedEmpId = null;
   document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("verify-screen").style.display = "none";
   document.getElementById("app-header").style.display = "none";
   document.getElementById("app-content").style.display = "none";
 }
@@ -994,6 +1028,52 @@ async function exportFile(type, period, employeeId) {
     toast(`Export ${type.toUpperCase()} téléchargé`);
   } catch(e) { toast(e.message, 'error'); }
 }
+
+// ═══════════════════════════════════════════
+// EMAIL VERIFICATION
+// ═══════════════════════════════════════════
+function showVerifyScreen(email) {
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("verify-screen").style.display = "flex";
+  document.getElementById("verify-email-display").textContent = email;
+  document.getElementById("verify-code").value = '';
+  document.getElementById("verify-error").style.display = 'none';
+  setTimeout(() => document.getElementById("verify-code").focus(), 100);
+}
+
+function backToLogin() {
+  document.getElementById("verify-screen").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+}
+
+async function doVerify() {
+  const code = document.getElementById("verify-code").value.trim();
+  const errEl = document.getElementById("verify-error");
+  const btn = document.getElementById("verify-btn");
+  errEl.style.display = "none";
+  if (!code || code.length !== 6) { errEl.textContent = "Entrez le code à 6 chiffres"; errEl.style.display = "block"; return; }
+  btn.disabled = true;
+  try {
+    await api("/api/verify-email", {method:"POST", body:{code}});
+    toast("Email vérifié !");
+    document.getElementById("verify-screen").style.display = "none";
+    const me = await api("/api/me");
+    enterApp(me);
+  } catch(e) { errEl.textContent = e.message; errEl.style.display = "block"; }
+  btn.disabled = false;
+}
+
+async function doResendCode() {
+  const btn = document.getElementById("resend-btn");
+  btn.disabled = true; btn.textContent = "Envoi...";
+  try {
+    await api("/api/resend-code", {method:"POST"});
+    toast("Nouveau code envoyé !");
+  } catch(e) { toast(e.message, "error"); }
+  btn.disabled = false; btn.textContent = "Renvoyer le code";
+}
+
+document.getElementById("verify-code").addEventListener("keydown", e => { if(e.key==="Enter") doVerify(); });
 
 </script>
 </body>

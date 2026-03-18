@@ -1,4 +1,4 @@
-import os, uuid, base64, secrets, re, smtplib, io
+import os, uuid, base64, secrets, re, smtplib, io, random
 from datetime import datetime, date, timedelta
 from functools import wraps
 from email.message import EmailMessage
@@ -123,10 +123,17 @@ def api_register():
         ex(f"INSERT INTO companies (id,name,slug,plan,max_employees) VALUES ({PH},{PH},{PH},{PH},{PH})",
            (comp_id, company_name, slug, 'starter', 10), conn)
 
-        ex(f"INSERT INTO employees (id,company_id,employee_code,first_name,last_name,email,department,position,password_hash,role) VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH})",
-           (emp_id, comp_id, code, first_name, last_name, email, '', 'Directeur', generate_password_hash(password), 'admin'), conn)
+        # Generate verification code
+        verify_code = str(random.randint(100000, 999999))
+        verify_expires = (datetime.now() + timedelta(minutes=30)).isoformat()
+
+        ex(f"INSERT INTO employees (id,company_id,employee_code,first_name,last_name,email,department,position,password_hash,role,email_verified,verify_code,verify_expires) VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH})",
+           (emp_id, comp_id, code, first_name, last_name, email, '', 'Directeur', generate_password_hash(password), 'admin', False, verify_code, verify_expires), conn)
 
         conn.commit()
+
+    # Send verification email
+    send_verification_email(email, first_name, verify_code)
 
     session['employee_id'] = emp_id
     session['company_id'] = comp_id
@@ -134,6 +141,7 @@ def api_register():
 
     return jsonify({
         "message": "Entreprise créée avec succès",
+        "needsVerification": True,
         "company": {"id": comp_id, "name": company_name, "slug": slug},
         "user": {
             "id": emp_id, "code": code, "firstName": first_name, "lastName": last_name,
@@ -166,6 +174,21 @@ def api_login():
     session['company_id'] = emp['company_id']
     session['role'] = emp['role']
 
+    # Check email verification
+    if not emp.get('email_verified'):
+        # Send new code
+        verify_code = str(random.randint(100000, 999999))
+        verify_expires = (datetime.now() + timedelta(minutes=30)).isoformat()
+        with get_db() as conn:
+            ex(f"UPDATE employees SET verify_code={PH}, verify_expires={PH} WHERE id={PH}",
+               (verify_code, verify_expires, emp['id']), conn)
+        send_verification_email(emp['email'], emp['first_name'], verify_code)
+        return jsonify({
+            "needsVerification": True,
+            "email": emp['email'],
+            "message": "Un code de vérification a été envoyé à votre email"
+        })
+
     return jsonify({
         "id": emp['id'], "code": emp['employee_code'],
         "firstName": emp['first_name'], "lastName": emp['last_name'],
@@ -178,6 +201,67 @@ def api_login():
 def api_logout():
     session.clear()
     return jsonify({"ok": True})
+
+# ═══════════════════════════════════════════
+# API — EMAIL VERIFICATION
+# ═══════════════════════════════════════════
+@app.route('/api/verify-email', methods=['POST'])
+@rate_limit(max_requests=10, window=300, scope='verify')
+def api_verify_email():
+    if 'employee_id' not in session:
+        return jsonify({"error": "Non authentifié"}), 401
+    data = request.json or {}
+    code = data.get('code', '').strip()
+    if not code or len(code) != 6:
+        return jsonify({"error": "Code à 6 chiffres requis"}), 400
+
+    with get_db() as conn:
+        emp = q1(f"SELECT * FROM employees WHERE id={PH}", (session['employee_id'],), conn)
+        if not emp:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
+        if emp.get('email_verified'):
+            return jsonify({"message": "Email déjà vérifié", "verified": True})
+
+        # Check code and expiry
+        if emp.get('verify_code') != code:
+            return jsonify({"error": "Code incorrect"}), 400
+
+        expires = emp.get('verify_expires')
+        if expires:
+            exp_str = str(expires)
+            if 'T' in exp_str:
+                try:
+                    exp_dt = datetime.fromisoformat(exp_str.replace('+00:00', '').replace('Z', ''))
+                    if datetime.now() > exp_dt:
+                        return jsonify({"error": "Code expiré. Cliquez sur 'Renvoyer le code'."}), 400
+                except:
+                    pass
+
+        ex(f"UPDATE employees SET email_verified=TRUE, verify_code=NULL, verify_expires=NULL WHERE id={PH}",
+           (session['employee_id'],), conn)
+
+    return jsonify({"message": "Email vérifié avec succès", "verified": True})
+
+@app.route('/api/resend-code', methods=['POST'])
+@rate_limit(max_requests=3, window=300, scope='resend')
+def api_resend_code():
+    if 'employee_id' not in session:
+        return jsonify({"error": "Non authentifié"}), 401
+
+    with get_db() as conn:
+        emp = q1(f"SELECT * FROM employees WHERE id={PH}", (session['employee_id'],), conn)
+        if not emp:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
+        if emp.get('email_verified'):
+            return jsonify({"message": "Email déjà vérifié"})
+
+        verify_code = str(random.randint(100000, 999999))
+        verify_expires = (datetime.now() + timedelta(minutes=30)).isoformat()
+        ex(f"UPDATE employees SET verify_code={PH}, verify_expires={PH} WHERE id={PH}",
+           (verify_code, verify_expires, emp['id']), conn)
+
+    send_verification_email(emp['email'], emp['first_name'], verify_code)
+    return jsonify({"message": "Nouveau code envoyé"})
 
 @app.route('/api/me')
 @login_required
@@ -192,6 +276,7 @@ def api_me():
         "firstName": emp['first_name'], "lastName": emp['last_name'],
         "email": emp['email'], "department": emp['department'],
         "position": emp['position'], "role": emp['role'],
+        "emailVerified": bool(emp.get('email_verified')),
         "avatar": (emp['first_name'][0] + emp['last_name'][0]).upper(),
         "company": {"name": emp['company_name'], "plan": emp['plan'], "slug": emp['slug']},
         "limits": limits
@@ -561,6 +646,13 @@ def run_migrations():
                 read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT NOW()
             )""", (), conn)
+            # Email verification
+            try:
+                ex("ALTER TABLE employees ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE", (), conn)
+                ex("ALTER TABLE employees ADD COLUMN IF NOT EXISTS verify_code VARCHAR(10)", (), conn)
+                ex("ALTER TABLE employees ADD COLUMN IF NOT EXISTS verify_expires TIMESTAMP", (), conn)
+            except Exception:
+                pass
     except Exception as e:
         print(f"[Migration] {e}")
 
@@ -590,6 +682,44 @@ def send_email(to, subject, text_body, html_body=None):
     except Exception as e:
         print(f"[EMAIL ERROR] {e}")
         return False
+
+def build_verification_html(first_name, code):
+    return f"""<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f7f5f2;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellspacing="0" cellpadding="0" style="background:#f7f5f2;padding:40px 0;">
+<tr><td align="center">
+<table width="520" cellspacing="0" cellpadding="0" style="max-width:520px;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+  <tr><td style="background:linear-gradient(135deg,#b5577a,#c77dba);padding:32px 40px;text-align:center;">
+    <span style="font-size:32px;">🌸</span><br/>
+    <span style="font-size:22px;font-weight:700;color:#fff;letter-spacing:1px;">CAMÉLIA</span>
+  </td></tr>
+  <tr><td style="background:#fff;padding:40px;text-align:center;">
+    <h1 style="font-size:20px;color:#2c2825;margin:0 0 12px;">Vérifiez votre email, {first_name}</h1>
+    <p style="font-size:14px;color:#9a938c;margin:0 0 28px;line-height:1.6;">
+      Entrez ce code dans l'application pour activer votre compte.
+    </p>
+    <div style="display:inline-block;background:#f7f5f2;border:2px solid #b5577a;border-radius:14px;padding:20px 40px;margin-bottom:24px;">
+      <span style="font-size:36px;font-weight:800;color:#b5577a;letter-spacing:12px;font-family:monospace;">{code}</span>
+    </div>
+    <p style="font-size:12px;color:#9a938c;margin:0;">
+      Ce code expire dans 30 minutes. Si vous n'avez pas demandé ce code, ignorez cet email.
+    </p>
+  </td></tr>
+  <tr><td style="background:#2c2825;padding:20px;text-align:center;">
+    <span style="font-size:11px;color:#9a938c;">Camélia — Système de pointage intelligent</span>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>"""
+
+def send_verification_email(email, first_name, code):
+    send_email(
+        to=email,
+        subject=f"🌸 Votre code de vérification Camélia : {code}",
+        text_body=f"Bonjour {first_name},\n\nVotre code de vérification Camélia est : {code}\n\nCe code expire dans 30 minutes.\n\nL'équipe Camélia",
+        html_body=build_verification_html(first_name, code)
+    )
 
 def build_confirmation_html(name):
     return f"""<!DOCTYPE html>
