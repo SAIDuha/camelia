@@ -285,6 +285,47 @@ tbody tr:hover{background:var(--primary-light)}
   </div>
 </div>
 
+<!-- ══════════ TRIAL EXPIRED SCREEN ══════════ -->
+<div id="trial-expired-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px;background:var(--bg)">
+  <div class="auth-box fade-up" style="max-width:500px;text-align:center">
+    <div style="font-size:60px;margin-bottom:16px">🌸</div>
+    <h2 style="font-family:var(--font-display);font-size:28px;margin-bottom:8px">Votre essai est terminé</h2>
+    <p style="color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:28px">
+      Votre période d'essai gratuit de 14 jours est arrivée à son terme.<br/>
+      Pour continuer à utiliser Camélia, choisissez un plan.
+    </p>
+    <div class="card" style="padding:24px;margin-bottom:20px;text-align:left">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Starter</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--font-display)">19€<span style="font-size:14px;font-weight:400;color:var(--muted)">/mois</span></div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Pro</div>
+          <div style="font-size:28px;font-weight:700;font-family:var(--font-display);color:var(--primary)">49€<span style="font-size:14px;font-weight:400;color:var(--muted)">/mois</span></div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">
+        Effectuez un virement bancaire puis contactez-nous. Votre plan sera activé sous 24h.
+      </p>
+      <div style="background:var(--input-bg);border-radius:10px;padding:14px;font-size:13px;margin-bottom:16px">
+        <div style="color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em">Coordonnées bancaires</div>
+        <div><span style="color:var(--muted)">Titulaire :</span> <strong>Camélia SAS</strong></div>
+        <div><span style="color:var(--muted)">IBAN :</span> <strong style="font-family:monospace;font-size:12px">FR76 XXXX XXXX XXXX XXXX XXXX XXX</strong></div>
+      </div>
+      <a href="mailto:contact@camelia.app?subject=Activation plan — essai terminé" class="btn btn-primary btn-block" style="text-decoration:none;text-align:center">
+        Nous contacter pour activer
+      </a>
+    </div>
+    <button class="btn-link" onclick="doLogout()" style="color:var(--muted);font-size:13px;cursor:pointer;background:none;border:none;font-family:var(--font-body)">Déconnexion</button>
+  </div>
+</div>
+
+<!-- ══════════ TRIAL BANNER ══════════ -->
+<div id="trial-banner" style="display:none;background:linear-gradient(90deg,var(--primary),#c77dba);color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:500;font-family:var(--font-body)">
+  <span id="trial-banner-text"></span>
+</div>
+
 <!-- ══════════ HEADER ══════════ -->
 <header class="header" id="app-header">
   <div class="logo">
@@ -417,9 +458,37 @@ function switchAuthTab(tab) {
 function enterApp(u) {
   user = u;
   document.getElementById("login-screen").style.display = "none";
+  document.getElementById("verify-screen").style.display = "none";
+
+  // Check trial status
+  const trial = u.trial;
+  if (trial && trial.expired && !trial.isPaid) {
+    document.getElementById("trial-expired-screen").style.display = "flex";
+    document.getElementById("app-header").style.display = "none";
+    document.getElementById("app-content").style.display = "none";
+    document.getElementById("trial-banner").style.display = "none";
+    return;
+  }
+
+  document.getElementById("trial-expired-screen").style.display = "none";
   document.getElementById("app-header").style.display = "flex";
   document.getElementById("app-content").style.display = "block";
   document.getElementById("header-avatar").textContent = user.avatar;
+
+  // Show trial banner if on trial
+  if (trial && !trial.isPaid && trial.daysLeft !== null) {
+    const banner = document.getElementById("trial-banner");
+    const text = document.getElementById("trial-banner-text");
+    if (trial.daysLeft <= 3) {
+      text.textContent = `⚠️ Plus que ${trial.daysLeft} jour${trial.daysLeft > 1 ? 's' : ''} d'essai gratuit ! Passez à un plan payant pour continuer.`;
+    } else {
+      text.textContent = `🌸 Essai gratuit — ${trial.daysLeft} jours restants`;
+    }
+    banner.style.display = "block";
+  } else {
+    document.getElementById("trial-banner").style.display = "none";
+  }
+
   updateClock(); adminPage = "dashboard"; viewPeriod = "week"; render();
 }
 async function doLogin() {

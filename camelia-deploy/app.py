@@ -65,6 +65,39 @@ def get_company_plan():
         co = q1(f"SELECT plan FROM companies WHERE id={PH}", (session['company_id'],), conn)
         return PLAN_LIMITS.get(co['plan'], PLAN_LIMITS['starter']) if co else PLAN_LIMITS['starter']
 
+def get_trial_status(company):
+    """Returns dict with trial info. Company is a db row dict."""
+    is_paid = bool(company.get('is_paid'))
+    if is_paid:
+        return {"active": True, "isPaid": True, "daysLeft": None, "expired": False}
+    trial_ends = company.get('trial_ends_at')
+    if not trial_ends:
+        return {"active": True, "isPaid": False, "daysLeft": 14, "expired": False}
+    try:
+        exp_str = str(trial_ends).replace('+00:00', '').replace('Z', '')
+        if 'T' in exp_str:
+            exp_dt = datetime.fromisoformat(exp_str)
+        else:
+            exp_dt = datetime.strptime(exp_str[:19], '%Y-%m-%d %H:%M:%S')
+        now = datetime.now()
+        diff = exp_dt - now
+        days_left = max(0, diff.days)
+        expired = now > exp_dt
+        return {"active": not expired, "isPaid": False, "daysLeft": days_left, "expired": expired,
+                "trialEnds": exp_dt.strftime('%d/%m/%Y')}
+    except Exception as e:
+        print(f"[Trial check error] {e}")
+        return {"active": True, "isPaid": False, "daysLeft": 14, "expired": False}
+
+def is_trial_expired():
+    """Quick check for route guards. Returns (expired, days_left, is_paid)."""
+    with get_db() as conn:
+        co = q1(f"SELECT trial_ends_at, is_paid FROM companies WHERE id={PH}", (session.get('company_id'),), conn)
+    if not co:
+        return False, 0, False
+    status = get_trial_status(co)
+    return status['expired'], status.get('daysLeft', 0) or 0, status['isPaid']
+
 # ═══════════════════════════════════════════
 # PAGES
 # ═══════════════════════════════════════════
@@ -120,8 +153,9 @@ def api_register():
         emp_id = str(uuid.uuid4())
         code = "E001"
 
-        ex(f"INSERT INTO companies (id,name,slug,plan,max_employees) VALUES ({PH},{PH},{PH},{PH},{PH})",
-           (comp_id, company_name, slug, 'starter', 10), conn)
+        trial_ends = (datetime.now() + timedelta(days=14)).isoformat()
+        ex(f"INSERT INTO companies (id,name,slug,plan,max_employees,trial_ends_at,is_paid) VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH})",
+           (comp_id, company_name, slug, 'starter', 10, trial_ends, False), conn)
 
         # Generate verification code
         verify_code = str(random.randint(100000, 999999))
@@ -267,10 +301,11 @@ def api_resend_code():
 @login_required
 def api_me():
     with get_db() as conn:
-        emp = q1(f"SELECT e.*, c.name as company_name, c.plan, c.slug FROM employees e JOIN companies c ON e.company_id=c.id WHERE e.id={PH}", (session['employee_id'],), conn)
+        emp = q1(f"SELECT e.*, c.name as company_name, c.plan, c.slug, c.trial_ends_at, c.is_paid FROM employees e JOIN companies c ON e.company_id=c.id WHERE e.id={PH}", (session['employee_id'],), conn)
     if not emp:
         return jsonify({"error": "Introuvable"}), 404
     limits = PLAN_LIMITS.get(emp['plan'], PLAN_LIMITS['starter'])
+    trial = get_trial_status(emp)
     return jsonify({
         "id": emp['id'], "code": emp['employee_code'],
         "firstName": emp['first_name'], "lastName": emp['last_name'],
@@ -279,7 +314,8 @@ def api_me():
         "emailVerified": bool(emp.get('email_verified')),
         "avatar": (emp['first_name'][0] + emp['last_name'][0]).upper(),
         "company": {"name": emp['company_name'], "plan": emp['plan'], "slug": emp['slug']},
-        "limits": limits
+        "limits": limits,
+        "trial": trial
     })
 
 # ═══════════════════════════════════════════
@@ -330,6 +366,10 @@ def api_employees():
 @app.route('/api/employees', methods=['POST'])
 @admin_required
 def api_create_employee():
+    expired, _, is_paid = is_trial_expired()
+    if expired and not is_paid:
+        return jsonify({"error": "Votre essai gratuit est terminé. Passez à un plan payant pour continuer.", "trialExpired": True}), 403
+
     data = request.json or {}
 
     first_name, err = validate_name(data.get('firstName', ''), "Prénom")
@@ -438,6 +478,10 @@ def api_today_badge():
 @app.route('/api/badges/punch', methods=['POST'])
 @login_required
 def api_punch():
+    expired, _, is_paid = is_trial_expired()
+    if expired and not is_paid:
+        return jsonify({"error": "Votre essai gratuit est terminé. Passez à un plan payant pour continuer.", "trialExpired": True}), 403
+
     data = request.json or {}
     action = data.get('action')
     photo_data = data.get('photo')
@@ -653,6 +697,12 @@ def run_migrations():
                 ex("ALTER TABLE employees ADD COLUMN IF NOT EXISTS verify_expires TIMESTAMP", (), conn)
             except Exception:
                 pass
+            # Trial system
+            try:
+                ex("ALTER TABLE companies ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP", (), conn)
+                ex("ALTER TABLE companies ADD COLUMN IF NOT EXISTS is_paid BOOLEAN DEFAULT FALSE", (), conn)
+            except Exception:
+                pass
     except Exception as e:
         print(f"[Migration] {e}")
 
@@ -852,6 +902,10 @@ def list_invitations():
 @admin_required
 @rate_limit(max_requests=20, window=300, scope='invitation')
 def create_invitation():
+    expired, _, is_paid = is_trial_expired()
+    if expired and not is_paid:
+        return jsonify({"error": "Votre essai gratuit est terminé.", "trialExpired": True}), 403
+
     data = request.json or {}
 
     with get_db() as conn:

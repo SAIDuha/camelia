@@ -95,7 +95,7 @@ tr:hover{background:#ffffff08}
   <div class="sa-table-wrap">
     <h3>Toutes les entreprises</h3>
     <table>
-      <thead><tr><th>Entreprise</th><th>Admin</th><th>Email</th><th>Employés</th><th>Plan</th><th>Changer plan</th><th>Statut</th><th>Créé le</th></tr></thead>
+      <thead><tr><th>Entreprise</th><th>Admin</th><th>Email</th><th>Employés</th><th>Plan</th><th>Changer plan</th><th>Paiement</th><th>Statut</th><th>Créé le</th></tr></thead>
       <tbody id="sa-tbody"></tbody>
     </table>
   </div>
@@ -182,6 +182,12 @@ async function loadDashboard() {
           </select>
         </td>
         <td>
+          ${c.isPaid
+            ? '<span style="color:var(--success);font-size:12px;font-weight:600">✓ Payé</span>'
+            : `<span style="color:var(--warning);font-size:11px">${c.trialEnds ? 'Essai → '+c.trialEnds : 'Essai'}</span><br/><button class="toggle-btn" onclick="markPaid('${c.id}')" style="margin-top:4px;border-color:var(--success);color:var(--success)">Activer</button>`
+          }
+        </td>
+        <td>
           <span class="active-dot" style="background:${c.isActive?'var(--success)':'var(--danger)'}"></span>
           ${c.isActive?'Actif':'Inactif'}
           <button class="toggle-btn" onclick="toggleCompany('${c.id}')" style="margin-left:6px">${c.isActive?'Désactiver':'Activer'}</button>
@@ -235,6 +241,14 @@ async function toggleCompany(companyId) {
   try {
     const res = await saApi(`/api/superadmin/companies/${companyId}/toggle`, {method:"PUT"});
     saToast(res.isActive ? "Entreprise activée" : "Entreprise désactivée");
+    loadDashboard();
+  } catch(e) { saToast(e.message, "error"); }
+}
+
+async function markPaid(companyId) {
+  try {
+    await saApi(`/api/superadmin/companies/${companyId}/paid`, {method:"PUT", body:{isPaid:true}});
+    saToast("Entreprise marquée comme payée ✓");
     loadDashboard();
   } catch(e) { saToast(e.message, "error"); }
 }

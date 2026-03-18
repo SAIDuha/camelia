@@ -70,11 +70,23 @@ def list_companies():
                 "maxEmployees": c['max_employees'],
                 "employeeCount": emp_count['c'] if emp_count else 0,
                 "isActive": c['is_active'] if 'is_active' in c.keys() else True,
+                "isPaid": bool(c.get('is_paid')),
+                "trialEnds": str(c.get('trial_ends_at', ''))[:10] if c.get('trial_ends_at') else '',
                 "createdAt": str(c['created_at']) if c.get('created_at') else '',
                 "adminName": f"{admin_info['first_name']} {admin_info['last_name']}" if admin_info else '—',
                 "adminEmail": admin_info['email'] if admin_info else '—',
             })
     return jsonify(result)
+
+# ── Mark as paid ──
+@superadmin_bp.route('/api/superadmin/companies/<company_id>/paid', methods=['PUT'])
+@superadmin_required
+def mark_paid(company_id):
+    data = request.json or {}
+    is_paid = data.get('isPaid', True)
+    with get_db() as conn:
+        ex(f"UPDATE companies SET is_paid={PH} WHERE id={PH}", (is_paid, company_id), conn)
+    return jsonify({"message": "Statut de paiement mis à jour", "isPaid": is_paid})
 
 # ── Change plan ──
 @superadmin_bp.route('/api/superadmin/companies/<company_id>/plan', methods=['PUT'])
@@ -86,9 +98,9 @@ def change_plan(company_id):
         return jsonify({"error": "Plan invalide"}), 400
     config = PLAN_CONFIG[plan]
     with get_db() as conn:
-        ex(f"UPDATE companies SET plan={PH}, max_employees={PH} WHERE id={PH}",
+        ex(f"UPDATE companies SET plan={PH}, max_employees={PH}, is_paid=TRUE WHERE id={PH}",
            (plan, config['max_employees'], company_id), conn)
-    return jsonify({"message": f"Plan changé en {plan}", "maxEmployees": config['max_employees']})
+    return jsonify({"message": f"Plan changé en {plan} (payé)", "maxEmployees": config['max_employees']})
 
 # ── Toggle active ──
 @superadmin_bp.route('/api/superadmin/companies/<company_id>/toggle', methods=['PUT'])
