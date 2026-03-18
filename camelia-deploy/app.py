@@ -1,12 +1,13 @@
-import os, uuid, base64, secrets, re, smtplib
+import os, uuid, base64, secrets, re, smtplib, io
 from datetime import datetime, date, timedelta
 from functools import wraps
 from email.message import EmailMessage
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, request, jsonify, render_template, session, send_from_directory
+from flask import Flask, request, jsonify, render_template, session, send_from_directory, send_file
 
 from db import get_db, q, q1, ex, PH, init_db, seed_demo
 from superadmin_routes import superadmin_bp
+from exports import generate_excel, generate_pdf
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -776,6 +777,103 @@ def accept_invitation(invite_code):
         "message": f"Bienvenue chez {invite['company_name']} !",
         "redirect": "/app"
     }), 201
+
+# ═══════════════════════════════════════════
+# API — EXPORTS (Pro/Enterprise only)
+# ═══════════════════════════════════════════
+def get_export_data(period='month', employee_id=None):
+    """Fetch badges and employee info for export."""
+    today = date.today()
+    if period == 'week': start = today - timedelta(days=today.weekday())
+    elif period == 'month': start = today.replace(day=1)
+    elif period == 'year': start = today.replace(month=1, day=1)
+    else: start = today - timedelta(days=30)
+
+    with get_db() as conn:
+        company = q1(f"SELECT * FROM companies WHERE id={PH}", (session['company_id'],), conn)
+
+        if employee_id:
+            emps = q(f"SELECT * FROM employees WHERE id={PH} AND company_id={PH}",
+                     (employee_id, session['company_id']), conn)
+        else:
+            active = True if os.environ.get('DATABASE_URL') else 1
+            emps = q(f"SELECT * FROM employees WHERE company_id={PH} AND is_active={PH} ORDER BY last_name",
+                     (session['company_id'], active), conn)
+
+        employees_data = []
+        for e in emps:
+            badges = q(f"SELECT * FROM badges WHERE employee_id={PH} AND company_id={PH} AND date>={PH} ORDER BY date",
+                       (e['id'], session['company_id'], start.isoformat()), conn)
+            # Convert badge_date field name if needed
+            clean_badges = []
+            for b in badges:
+                cb = dict(b)
+                if 'badge_date' in cb and 'date' not in cb:
+                    cb['date'] = str(cb['badge_date'])
+                elif 'date' in cb:
+                    cb['date'] = str(cb['date'])
+                clean_badges.append(cb)
+
+            employees_data.append({
+                'name': f"{e['first_name']} {e['last_name']}",
+                'code': e['employee_code'],
+                'department': e['department'] or '',
+                'badges': clean_badges,
+            })
+
+    return company, employees_data, start, today
+
+@app.route('/api/export/excel')
+@admin_required
+def export_excel():
+    # Check plan
+    with get_db() as conn:
+        co = q1(f"SELECT plan FROM companies WHERE id={PH}", (session['company_id'],), conn)
+    plan = co['plan'] if co else 'starter'
+    if plan not in ('pro', 'enterprise'):
+        return jsonify({"error": "L'export Excel est réservé aux plans Pro et Enterprise. Passez au plan supérieur pour débloquer cette fonctionnalité."}), 403
+
+    period = request.args.get('period', 'month')
+    employee_id = request.args.get('employee_id')
+    company, employees_data, start, end = get_export_data(period, employee_id)
+
+    from exports import get_period_label
+    period_label = get_period_label(period, start, end)
+
+    excel_bytes = generate_excel(company['name'], employees_data, period_label)
+
+    return send_file(
+        io.BytesIO(excel_bytes),
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=f"camelia-pointage-{period}-{end.isoformat()}.xlsx"
+    )
+
+@app.route('/api/export/pdf')
+@admin_required
+def export_pdf():
+    # Check plan
+    with get_db() as conn:
+        co = q1(f"SELECT plan FROM companies WHERE id={PH}", (session['company_id'],), conn)
+    plan = co['plan'] if co else 'starter'
+    if plan not in ('pro', 'enterprise'):
+        return jsonify({"error": "L'export PDF est réservé aux plans Pro et Enterprise."}), 403
+
+    period = request.args.get('period', 'month')
+    employee_id = request.args.get('employee_id')
+    company, employees_data, start, end = get_export_data(period, employee_id)
+
+    from exports import get_period_label
+    period_label = get_period_label(period, start, end)
+
+    pdf_bytes = generate_pdf(company['name'], employees_data, period_label)
+
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f"camelia-pointage-{period}-{end.isoformat()}.pdf"
+    )
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

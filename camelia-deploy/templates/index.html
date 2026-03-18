@@ -655,7 +655,19 @@ async function renderAdminDashboard(el) {
 
   el.innerHTML = `<div class="fade-up">
     ${adminNav()}
-    <h2 class="page-title" style="margin-bottom:24px">Tableau de bord</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <h2 class="page-title" style="margin:0">Tableau de bord</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="exportFile('excel','month')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h2M8 17h2M12 13h4M12 17h4"/></svg>
+          Export Excel
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="exportFile('pdf','month')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M10 13l2 2 4-4"/></svg>
+          Export PDF
+        </button>
+      </div>
+    </div>
     <div class="stats-row">
       <div class="stat-card"><div class="top"><span class="s-label">Présents</span><span class="s-icon" style="color:var(--success)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span></div><div class="s-value">${summary.present}</div><div class="s-sub">sur ${summary.total} salariés</div></div>
       <div class="stat-card"><div class="top"><span class="s-label">En pause</span><span class="s-icon" style="color:var(--warning)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg></span></div><div class="s-value">${summary.onBreak}</div></div>
@@ -856,6 +868,16 @@ async function renderAdminDetail(el) {
     <div class="emp-header">
       <div class="avatar lg">${emp.avatar}</div>
       <div class="meta"><h2 class="page-title">${emp.firstName} ${emp.lastName}</h2><p>${emp.department} · ${emp.code} · ${emp.position}</p></div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="exportFile('excel','month','${emp.id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          Excel
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="exportFile('pdf','month','${emp.id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          PDF
+        </button>
+      </div>
     </div>
     ${periodTabs()}
     <div class="stats-row">
@@ -947,6 +969,30 @@ async function renderAdminBilling(el) {
       </div>
     </div>
   </div>`;
+}
+
+// ═══════════════════════════════════════════
+// EXPORTS
+// ═══════════════════════════════════════════
+async function exportFile(type, period, employeeId) {
+  let url = `/api/export/${type}?period=${period || 'month'}`;
+  if (employeeId) url += `&employee_id=${employeeId}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const data = await res.json();
+      toast(data.error || 'Erreur export', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const ext = type === 'excel' ? 'xlsx' : 'pdf';
+    a.download = `camelia-pointage-${period}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast(`Export ${type.toUpperCase()} téléchargé`);
+  } catch(e) { toast(e.message, 'error'); }
 }
 
 </script>
