@@ -8,9 +8,13 @@ from flask import Flask, request, jsonify, render_template, session, send_from_d
 from db import get_db, q, q1, ex, PH, init_db, seed_demo
 from superadmin_routes import superadmin_bp
 from exports import generate_excel, generate_pdf
+from security import (rate_limit, validate_email, validate_password, validate_name,
+                       sanitize_string, check_employee_quota, check_admin_quota,
+                       check_invitation_quota, secure_session_config)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+secure_session_config(app)
 # Use Render Disk for persistent photo storage, fallback to local
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_PATH', os.path.join(os.path.dirname(__file__), 'static', 'uploads'))
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -84,22 +88,20 @@ def uploaded_file(filename):
 # API — REGISTRATION
 # ═══════════════════════════════════════════
 @app.route('/api/register', methods=['POST'])
+@rate_limit(max_requests=5, window=300, scope='register')
 def api_register():
     data = request.json or {}
-    company_name = data.get('companyName', '').strip()
-    first_name = data.get('firstName', '').strip()
-    last_name = data.get('lastName', '').strip()
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
 
-    errors = []
-    if not company_name: errors.append("Nom d'entreprise requis")
-    if not first_name: errors.append("Prénom requis")
-    if not last_name: errors.append("Nom requis")
-    if not email or '@' not in email: errors.append("Email invalide")
-    if len(password) < 6: errors.append("Mot de passe : 6 caractères minimum")
-    if errors:
-        return jsonify({"error": " · ".join(errors)}), 400
+    company_name, err = validate_name(data.get('companyName', ''), "Nom d'entreprise")
+    if err: return jsonify({"error": err}), 400
+    first_name, err = validate_name(data.get('firstName', ''), "Prénom")
+    if err: return jsonify({"error": err}), 400
+    last_name, err = validate_name(data.get('lastName', ''), "Nom")
+    if err: return jsonify({"error": err}), 400
+    email, err = validate_email(data.get('email', ''))
+    if err: return jsonify({"error": err}), 400
+    password, err = validate_password(data.get('password', ''))
+    if err: return jsonify({"error": err}), 400
 
     slug = re.sub(r'[^a-z0-9]+', '-', company_name.lower()).strip('-')
     if not slug:
@@ -144,12 +146,13 @@ def api_register():
 # API — AUTH
 # ═══════════════════════════════════════════
 @app.route('/api/login', methods=['POST'])
+@rate_limit(max_requests=10, window=300, scope='login')
 def api_login():
     data = request.json or {}
-    email = data.get('email', '').strip().lower()
+    email, err = validate_email(data.get('email', ''))
+    if err: return jsonify({"error": "Email et mot de passe requis"}), 400
     password = data.get('password', '')
-
-    if not email or not password:
+    if not password:
         return jsonify({"error": "Email et mot de passe requis"}), 400
 
     with get_db() as conn:
@@ -243,27 +246,35 @@ def api_employees():
 @admin_required
 def api_create_employee():
     data = request.json or {}
-    required = ['firstName', 'lastName', 'email', 'password']
-    for f in required:
-        if not data.get(f):
-            return jsonify({"error": f"Le champ {f} est requis"}), 400
 
-    limits = get_company_plan()
+    first_name, err = validate_name(data.get('firstName', ''), "Prénom")
+    if err: return jsonify({"error": err}), 400
+    last_name, err = validate_name(data.get('lastName', ''), "Nom")
+    if err: return jsonify({"error": err}), 400
+    email, err = validate_email(data.get('email', ''))
+    if err: return jsonify({"error": err}), 400
+    password, err = validate_password(data.get('password', ''))
+    if err: return jsonify({"error": err}), 400
+
     with get_db() as conn:
-        count = q1(f"SELECT COUNT(*) as c FROM employees WHERE company_id={PH} AND is_active={PH}",
-                   (session['company_id'], True if os.environ.get('DATABASE_URL') else 1), conn)
-        if count and count['c'] >= limits['max_employees']:
-            return jsonify({"error": f"Limite de {limits['max_employees']} employés atteinte. Changez de plan pour en ajouter plus."}), 403
+        # Get plan
+        co = q1(f"SELECT plan FROM companies WHERE id={PH}", (session['company_id'],), conn)
+        plan = co['plan'] if co else 'starter'
 
-        existing_email = q1(f"SELECT id FROM employees WHERE email={PH}", (data['email'].lower(),), conn)
+        # Check employee quota
+        ok, msg = check_employee_quota(conn, session['company_id'], plan, q1, PH)
+        if not ok:
+            return jsonify({"error": msg}), 403
+
+        existing_email = q1(f"SELECT id FROM employees WHERE email={PH}", (email,), conn)
         if existing_email:
             return jsonify({"error": "Cet email est déjà utilisé"}), 409
 
+        # Check admin quota if role is admin
         if data.get('role') == 'admin':
-            admin_count = q1(f"SELECT COUNT(*) as c FROM employees WHERE company_id={PH} AND role='admin' AND is_active={PH}",
-                             (session['company_id'], True if os.environ.get('DATABASE_URL') else 1), conn)
-            if admin_count and admin_count['c'] >= limits['max_admins']:
-                return jsonify({"error": f"Limite de {limits['max_admins']} admin(s) atteinte pour votre plan."}), 403
+            ok, msg = check_admin_quota(conn, session['company_id'], plan, q1, PH)
+            if not ok:
+                return jsonify({"error": msg}), 403
 
         # Auto-generate employee code
         last = q1(f"SELECT employee_code FROM employees WHERE company_id={PH} ORDER BY employee_code DESC LIMIT 1",
@@ -274,11 +285,17 @@ def api_create_employee():
             next_num = 1
         code = f'E{next_num:03d}'
 
+        dept = sanitize_string(data.get('department', ''))
+        position = sanitize_string(data.get('position', ''))
+        role = data.get('role', 'employee')
+        if role not in ('employee', 'admin'):
+            role = 'employee'
+
         emp_id = str(uuid.uuid4())
         ex(f"INSERT INTO employees (id,company_id,employee_code,first_name,last_name,email,department,position,password_hash,role) VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH})",
-           (emp_id, session['company_id'], code, data['firstName'], data['lastName'],
-            data['email'].lower(), data.get('department',''), data.get('position',''),
-            generate_password_hash(data['password']), data.get('role','employee')), conn)
+           (emp_id, session['company_id'], code, first_name, last_name,
+            email, dept, position,
+            generate_password_hash(password), role), conn)
 
     return jsonify({"id": emp_id, "code": code, "message": "Employé créé"}), 201
 
@@ -641,15 +658,16 @@ def build_admin_notif_html(name, email, company, size, message):
 # API — CONTACT FORM (public, no auth)
 # ═══════════════════════════════════════════
 @app.route('/api/contact', methods=['POST'])
+@rate_limit(max_requests=3, window=300, scope='contact')
 def api_contact():
     data = request.json or {}
-    name = data.get('name', '').strip()
-    email = data.get('email', '').strip().lower()
-    company = data.get('company', '').strip()
-    size = data.get('size', '').strip()
-    message = data.get('message', '').strip()
-    if not name or not email:
-        return jsonify({"error": "Nom et email requis"}), 400
+    name, err = validate_name(data.get('name', ''), "Nom")
+    if err: return jsonify({"error": err}), 400
+    email, err = validate_email(data.get('email', ''))
+    if err: return jsonify({"error": err}), 400
+    company = sanitize_string(data.get('company', ''), 200)
+    size = sanitize_string(data.get('size', ''), 20)
+    message = sanitize_string(data.get('message', ''), 2000)
 
     # Save to DB
     contact_id = str(uuid.uuid4())
@@ -702,14 +720,28 @@ def list_invitations():
 
 @app.route('/api/invitations', methods=['POST'])
 @admin_required
+@rate_limit(max_requests=20, window=300, scope='invitation')
 def create_invitation():
     data = request.json or {}
+
+    with get_db() as conn:
+        co = q1(f"SELECT plan FROM companies WHERE id={PH}", (session['company_id'],), conn)
+        plan = co['plan'] if co else 'starter'
+        ok, msg = check_invitation_quota(conn, session['company_id'], plan, q1, PH)
+        if not ok:
+            return jsonify({"error": msg}), 403
+
     invite_code = secrets.token_urlsafe(16)
     invite_id = str(uuid.uuid4())
+    role = data.get('role', 'employee')
+    if role not in ('employee', 'admin'):
+        role = 'employee'
+    dept = sanitize_string(data.get('department', ''), 100)
+    position = sanitize_string(data.get('position', ''), 100)
+
     with get_db() as conn:
         ex(f"INSERT INTO invitations (id,company_id,invite_code,role,department,position) VALUES ({PH},{PH},{PH},{PH},{PH},{PH})",
-           (invite_id, session['company_id'], invite_code,
-            data.get('role', 'employee'), data.get('department', ''), data.get('position', '')), conn)
+           (invite_id, session['company_id'], invite_code, role, dept, position), conn)
     link = f"{APP_URL}/join/{invite_code}"
     return jsonify({"id": invite_id, "code": invite_code, "link": link, "message": "Invitation créée"}), 201
 
@@ -735,20 +767,28 @@ def get_invite_info(invite_code):
     })
 
 @app.route('/api/join/<invite_code>', methods=['POST'])
+@rate_limit(max_requests=5, window=300, scope='join')
 def accept_invitation(invite_code):
     data = request.json or {}
-    for f in ['firstName', 'lastName', 'email', 'password']:
-        if not data.get(f, '').strip():
-            return jsonify({"error": f"Le champ {f} est requis"}), 400
-    if len(data['password']) < 6:
-        return jsonify({"error": "Mot de passe: 6 caractères minimum"}), 400
+    first_name, err = validate_name(data.get('firstName', ''), "Prénom")
+    if err: return jsonify({"error": err}), 400
+    last_name, err = validate_name(data.get('lastName', ''), "Nom")
+    if err: return jsonify({"error": err}), 400
+    email, err = validate_email(data.get('email', ''))
+    if err: return jsonify({"error": err}), 400
+    password, err = validate_password(data.get('password', ''))
+    if err: return jsonify({"error": err}), 400
 
-    email = data['email'].strip().lower()
     with get_db() as conn:
-        invite = q1(f"SELECT i.*, c.name as company_name FROM invitations i JOIN companies c ON i.company_id=c.id WHERE i.invite_code={PH} AND i.used=FALSE",
+        invite = q1(f"SELECT i.*, c.name as company_name, c.plan FROM invitations i JOIN companies c ON i.company_id=c.id WHERE i.invite_code={PH} AND i.used=FALSE",
                     (invite_code,), conn)
         if not invite:
             return jsonify({"error": "Invitation invalide ou déjà utilisée"}), 404
+
+        # Check employee quota before accepting
+        ok, msg = check_employee_quota(conn, invite['company_id'], invite['plan'], q1, PH)
+        if not ok:
+            return jsonify({"error": msg}), 403
 
         existing = q1(f"SELECT id FROM employees WHERE email={PH}", (email,), conn)
         if existing:
@@ -763,9 +803,9 @@ def accept_invitation(invite_code):
 
         emp_id = str(uuid.uuid4())
         ex(f"INSERT INTO employees (id,company_id,employee_code,first_name,last_name,email,department,position,password_hash,role) VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH},{PH})",
-           (emp_id, invite['company_id'], code, data['firstName'].strip(), data['lastName'].strip(),
+           (emp_id, invite['company_id'], code, first_name, last_name,
             email, invite['department'], invite['position'],
-            generate_password_hash(data['password']), invite['role']), conn)
+            generate_password_hash(password), invite['role']), conn)
 
         ex(f"UPDATE invitations SET used=TRUE WHERE id={PH}", (invite['id'],), conn)
 

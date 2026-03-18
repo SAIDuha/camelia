@@ -6,6 +6,7 @@ import os
 from functools import wraps
 from flask import Blueprint, request, jsonify, session, render_template
 from db import get_db, q, q1, ex, PH
+from security import rate_limit
 
 superadmin_bp = Blueprint('superadmin', __name__)
 
@@ -34,6 +35,7 @@ def superadmin_page():
 
 # ── Login ──
 @superadmin_bp.route('/api/superadmin/login', methods=['POST'])
+@rate_limit(max_requests=5, window=600, scope='superadmin_login')
 def superadmin_login():
     data = request.json or {}
     email = data.get('email', '').strip().lower()
