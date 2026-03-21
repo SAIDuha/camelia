@@ -84,8 +84,10 @@ a{color:var(--primary);text-decoration:none}
   .login-right{min-height:100vh;align-items:center;justify-content:center;padding:20px}
   .login-card{max-width:400px}
   .login-mobile-header{display:block;text-align:center;margin-bottom:32px}
+  .login-mobile-theme{display:flex;justify-content:center;margin-top:16px}
 }
 .login-mobile-header{display:none}
+.login-mobile-theme{display:none}
 .form-group{margin-bottom:18px}
 .form-label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .form-input{width:100%;padding:12px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--input-bg);font-size:14px;font-family:var(--font-body);color:var(--text);outline:none;transition:border-color .2s}
@@ -295,6 +297,7 @@ tbody tr:hover{background:var(--primary-light)}
             Creer mon entreprise</button>
         </div>
       </div>
+      <div class="login-mobile-theme"><button class="icon-btn" onclick="toggleTheme()" id="theme-btn-login-mobile"></button></div>
     </div>
   </div>
 </div>
