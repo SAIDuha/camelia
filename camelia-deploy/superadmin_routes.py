@@ -1,3 +1,4 @@
+# Camélia - Développé par EL-JAMII SAID, Strasbourg, France
 """
 Camélia — Super Admin Routes
 Secret panel for Sabri to manage all companies and plans.
@@ -10,7 +11,6 @@ from security import rate_limit
 
 superadmin_bp = Blueprint('superadmin', __name__)
 
-# Super admin password — set in Render env vars
 SUPERADMIN_EMAIL = os.environ.get('SUPERADMIN_EMAIL', 'sabri@camelia.app')
 SUPERADMIN_PASSWORD = os.environ.get('SUPERADMIN_PASSWORD', 'camelia-admin-2026')
 
@@ -28,12 +28,10 @@ def superadmin_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# ── Page ──
 @superadmin_bp.route('/superadmin')
 def superadmin_page():
     return render_template('superadmin.html')
 
-# ── Login ──
 @superadmin_bp.route('/api/superadmin/login', methods=['POST'])
 @rate_limit(max_requests=5, window=600, scope='superadmin_login')
 def superadmin_login():
@@ -50,7 +48,6 @@ def superadmin_logout():
     session.pop('is_superadmin', None)
     return jsonify({"ok": True})
 
-# ── List all companies ──
 @superadmin_bp.route('/api/superadmin/companies')
 @superadmin_required
 def list_companies():
@@ -78,7 +75,6 @@ def list_companies():
             })
     return jsonify(result)
 
-# ── Mark as paid ──
 @superadmin_bp.route('/api/superadmin/companies/<company_id>/paid', methods=['PUT'])
 @superadmin_required
 def mark_paid(company_id):
@@ -88,7 +84,6 @@ def mark_paid(company_id):
         ex(f"UPDATE companies SET is_paid={PH} WHERE id={PH}", (is_paid, company_id), conn)
     return jsonify({"message": "Statut de paiement mis à jour", "isPaid": is_paid})
 
-# ── Change plan ──
 @superadmin_bp.route('/api/superadmin/companies/<company_id>/plan', methods=['PUT'])
 @superadmin_required
 def change_plan(company_id):
@@ -102,7 +97,6 @@ def change_plan(company_id):
            (plan, config['max_employees'], company_id), conn)
     return jsonify({"message": f"Plan changé en {plan} (payé)", "maxEmployees": config['max_employees']})
 
-# ── Toggle active ──
 @superadmin_bp.route('/api/superadmin/companies/<company_id>/toggle', methods=['PUT'])
 @superadmin_required
 def toggle_company(company_id):
@@ -114,7 +108,6 @@ def toggle_company(company_id):
         ex(f"UPDATE companies SET is_active={PH} WHERE id={PH}", (new_status, company_id), conn)
     return jsonify({"message": "Statut mis à jour", "isActive": new_status})
 
-# ── Stats overview ──
 @superadmin_bp.route('/api/superadmin/stats')
 @superadmin_required
 def superadmin_stats():
@@ -131,7 +124,6 @@ def superadmin_stats():
         "planBreakdown": plan_counts,
     })
 
-# ── Contact requests ──
 @superadmin_bp.route('/api/superadmin/contacts')
 @superadmin_required
 def list_contacts():

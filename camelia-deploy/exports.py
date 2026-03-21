@@ -1,3 +1,4 @@
+# Camélia - Développé par EL-JAMII SAID, Strasbourg, France
 """
 Camélia — Export Module
 Generates Excel (.xlsx) and PDF reports for employee work hours.
@@ -50,9 +51,6 @@ def get_period_label(period, start_date, end_date):
     else:
         return f"Du {start_date.day}/{start_date.month}/{start_date.year} au {end_date.day}/{end_date.month}/{end_date.year}"
 
-# ═══════════════════════════════════════════
-# EXCEL EXPORT
-# ═══════════════════════════════════════════
 def generate_excel(company_name, employees_data, period_label):
     """
     Generates an Excel workbook with one sheet per employee + a summary sheet.
@@ -61,7 +59,6 @@ def generate_excel(company_name, employees_data, period_label):
     """
     wb = Workbook()
 
-    # Colors
     rose = "B5577A"
     rose_light = "F8EEF1"
     dark = "2C2825"
@@ -79,7 +76,6 @@ def generate_excel(company_name, employees_data, period_label):
         bottom=Side(style='thin', color=border_color)
     )
 
-    # ── Summary Sheet ──
     ws_summary = wb.active
     ws_summary.title = "Résumé"
     ws_summary.sheet_properties.tabColor = rose
@@ -126,11 +122,9 @@ def generate_excel(company_name, employees_data, period_label):
 
         row += 1
 
-    # Auto-width
     for col in range(1, 7):
         ws_summary.column_dimensions[get_column_letter(col)].width = 18
 
-    # ── Per-employee sheets ──
     for emp in employees_data:
         safe_name = emp['name'][:28].replace('/', '-')
         ws = wb.create_sheet(title=safe_name)
@@ -186,7 +180,6 @@ def generate_excel(company_name, employees_data, period_label):
 
             row += 1
 
-        # Total row
         row += 1
         ws.cell(row=row, column=5, value="TOTAL").font = total_font
         ws.cell(row=row, column=5).alignment = Alignment(horizontal='right')
@@ -202,9 +195,6 @@ def generate_excel(company_name, employees_data, period_label):
     return output.getvalue()
 
 
-# ═══════════════════════════════════════════
-# PDF EXPORT
-# ═══════════════════════════════════════════
 def generate_pdf(company_name, employees_data, period_label):
     """
     Generates a PDF report with all employees' hours.
@@ -222,7 +212,6 @@ def generate_pdf(company_name, employees_data, period_label):
 
     elements = []
 
-    # Header
     elements.append(Paragraph(f"🌸 Camélia — {company_name}", styles['CamTitle']))
     elements.append(Paragraph(f"Rapport de pointage · {period_label}", styles['CamSubtitle']))
 
@@ -284,7 +273,6 @@ def generate_pdf(company_name, employees_data, period_label):
             t = Table(table_data, colWidths=col_widths)
             style = TableStyle(header_style)
 
-            # Color total column based on hours
             for i, b in enumerate(sorted(emp['badges'], key=lambda x: x.get('date') or x.get('badge_date', '')), 1):
                 w = calc_work_minutes(b)
                 if w is not None and w >= 420:
@@ -299,7 +287,6 @@ def generate_pdf(company_name, employees_data, period_label):
         elements.append(Paragraph(f"Total : {fmt_hours(grand_total)}", styles['CamTotal']))
         elements.append(Spacer(1, 4*mm))
 
-    # Footer
     elements.append(Spacer(1, 8*mm))
     elements.append(Paragraph(
         f"Généré par Camélia · {date.today().strftime('%d/%m/%Y')}",

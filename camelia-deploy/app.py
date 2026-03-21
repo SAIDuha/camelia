@@ -1,3 +1,4 @@
+# Camélia - Développé par EL-JAMII SAID, Strasbourg, France
 import os, uuid, base64, secrets, re, smtplib, io, random
 from datetime import datetime, date, timedelta
 from functools import wraps
@@ -15,14 +16,10 @@ from security import (rate_limit, validate_email, validate_password, validate_na
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 secure_session_config(app)
-# Use Render Disk for persistent photo storage, fallback to local
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_PATH', os.path.join(os.path.dirname(__file__), 'static', 'uploads'))
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 APP_URL = os.environ.get('APP_URL', 'https://camelia-02uo.onrender.com')
 
-# ═══════════════════════════════════════════
-# EMAIL CONFIG
-# ═══════════════════════════════════════════
 SMTP_HOST = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
 SMTP_USER = os.environ.get('SMTP_USER', '')
@@ -39,9 +36,6 @@ init_db()
 seed_demo()
 app.register_blueprint(superadmin_bp)
 
-# ═══════════════════════════════════════════
-# AUTH DECORATORS
-# ═══════════════════════════════════════════
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -98,9 +92,6 @@ def is_trial_expired():
     status = get_trial_status(co)
     return status['expired'], status.get('daysLeft', 0) or 0, status['isPaid']
 
-# ═══════════════════════════════════════════
-# PAGES
-# ═══════════════════════════════════════════
 @app.route('/')
 def landing():
     return render_template('landing.html')
@@ -117,9 +108,6 @@ def register_page():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# ═══════════════════════════════════════════
-# API — REGISTRATION
-# ═══════════════════════════════════════════
 @app.route('/api/register', methods=['POST'])
 @rate_limit(max_requests=5, window=300, scope='register')
 def api_register():
@@ -157,7 +145,6 @@ def api_register():
         ex(f"INSERT INTO companies (id,name,slug,plan,max_employees,trial_ends_at,is_paid) VALUES ({PH},{PH},{PH},{PH},{PH},{PH},{PH})",
            (comp_id, company_name, slug, 'starter', 10, trial_ends, False), conn)
 
-        # Generate verification code
         verify_code = str(random.randint(100000, 999999))
         verify_expires = (datetime.now() + timedelta(minutes=30)).isoformat()
 
@@ -166,7 +153,6 @@ def api_register():
 
         conn.commit()
 
-    # Send verification email
     send_verification_email(email, first_name, verify_code)
 
     session['employee_id'] = emp_id
@@ -184,9 +170,6 @@ def api_register():
         }
     }), 201
 
-# ═══════════════════════════════════════════
-# API — AUTH
-# ═══════════════════════════════════════════
 @app.route('/api/login', methods=['POST'])
 @rate_limit(max_requests=10, window=300, scope='login')
 def api_login():
@@ -208,9 +191,7 @@ def api_login():
     session['company_id'] = emp['company_id']
     session['role'] = emp['role']
 
-    # Check email verification
     if not emp.get('email_verified'):
-        # Send new code
         verify_code = str(random.randint(100000, 999999))
         verify_expires = (datetime.now() + timedelta(minutes=30)).isoformat()
         with get_db() as conn:
@@ -236,9 +217,6 @@ def api_logout():
     session.clear()
     return jsonify({"ok": True})
 
-# ═══════════════════════════════════════════
-# API — EMAIL VERIFICATION
-# ═══════════════════════════════════════════
 @app.route('/api/verify-email', methods=['POST'])
 @rate_limit(max_requests=10, window=300, scope='verify')
 def api_verify_email():
@@ -256,7 +234,6 @@ def api_verify_email():
         if emp.get('email_verified'):
             return jsonify({"message": "Email déjà vérifié", "verified": True})
 
-        # Check code and expiry
         if emp.get('verify_code') != code:
             return jsonify({"error": "Code incorrect"}), 400
 
@@ -318,9 +295,6 @@ def api_me():
         "trial": trial
     })
 
-# ═══════════════════════════════════════════
-# API — COMPANY
-# ═══════════════════════════════════════════
 @app.route('/api/company', methods=['GET'])
 @admin_required
 def api_company():
@@ -345,9 +319,6 @@ def api_update_company():
             ex(f"UPDATE companies SET name={PH} WHERE id={PH}", (data['name'], session['company_id']), conn)
     return jsonify({"message": "Entreprise mise à jour"})
 
-# ═══════════════════════════════════════════
-# API — EMPLOYEES (Admin CRUD)
-# ═══════════════════════════════════════════
 @app.route('/api/employees', methods=['GET'])
 @login_required
 def api_employees():
@@ -382,11 +353,9 @@ def api_create_employee():
     if err: return jsonify({"error": err}), 400
 
     with get_db() as conn:
-        # Get plan
         co = q1(f"SELECT plan FROM companies WHERE id={PH}", (session['company_id'],), conn)
         plan = co['plan'] if co else 'starter'
 
-        # Check employee quota
         ok, msg = check_employee_quota(conn, session['company_id'], plan, q1, PH)
         if not ok:
             return jsonify({"error": msg}), 403
@@ -395,13 +364,11 @@ def api_create_employee():
         if existing_email:
             return jsonify({"error": "Cet email est déjà utilisé"}), 409
 
-        # Check admin quota if role is admin
         if data.get('role') == 'admin':
             ok, msg = check_admin_quota(conn, session['company_id'], plan, q1, PH)
             if not ok:
                 return jsonify({"error": msg}), 403
 
-        # Auto-generate employee code
         last = q1(f"SELECT employee_code FROM employees WHERE company_id={PH} ORDER BY employee_code DESC LIMIT 1",
                   (session['company_id'],), conn)
         try:
@@ -458,9 +425,6 @@ def api_delete_employee(emp_id):
            (inactive, emp_id, session['company_id']), conn)
     return jsonify({"message": "Employé désactivé"})
 
-# ═══════════════════════════════════════════
-# API — BADGES
-# ═══════════════════════════════════════════
 @app.route('/api/badges/today')
 @login_required
 def api_today_badge():
@@ -557,9 +521,6 @@ def api_badge_history():
         "photoArrival":b['photo_arrival'],"photoDeparture":b['photo_departure'],
     } for b in badges])
 
-# ═══════════════════════════════════════════
-# API — STATS
-# ═══════════════════════════════════════════
 def calc_work_minutes(b):
     if not b['arrival_time'] or not b['departure_time']: return None
     ah,am = map(int, b['arrival_time'].split(':'))
@@ -645,9 +606,6 @@ def api_dashboard():
         "summary":{"present":present,"onBreak":on_break,"absent":absent,"total":len(team)}
     })
 
-# ═══════════════════════════════════════════
-# API — PLAN INFO
-# ═══════════════════════════════════════════
 @app.route('/api/plan')
 @login_required
 def api_plan():
@@ -664,9 +622,6 @@ def api_plan():
     })
 
 
-# ═══════════════════════════════════════════
-# MIGRATIONS
-# ═══════════════════════════════════════════
 def run_migrations():
     try:
         with get_db() as conn:
@@ -690,14 +645,12 @@ def run_migrations():
                 read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT NOW()
             )""", (), conn)
-            # Email verification
             try:
                 ex("ALTER TABLE employees ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE", (), conn)
                 ex("ALTER TABLE employees ADD COLUMN IF NOT EXISTS verify_code VARCHAR(10)", (), conn)
                 ex("ALTER TABLE employees ADD COLUMN IF NOT EXISTS verify_expires TIMESTAMP", (), conn)
             except Exception:
                 pass
-            # Trial system
             try:
                 ex("ALTER TABLE companies ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP", (), conn)
                 ex("ALTER TABLE companies ADD COLUMN IF NOT EXISTS is_paid BOOLEAN DEFAULT FALSE", (), conn)
@@ -708,9 +661,6 @@ def run_migrations():
 
 run_migrations()
 
-# ═══════════════════════════════════════════
-# EMAIL HELPERS
-# ═══════════════════════════════════════════
 def send_email(to, subject, text_body, html_body=None):
     if not SMTP_USER or not SMTP_PASS:
         print(f"[WARN] SMTP non configuré, email non envoyé à {to}")
@@ -834,9 +784,6 @@ def build_admin_notif_html(name, email, company, size, message):
 </td></tr></table>
 </body></html>"""
 
-# ═══════════════════════════════════════════
-# API — CONTACT FORM (public, no auth)
-# ═══════════════════════════════════════════
 @app.route('/api/contact', methods=['POST'])
 @rate_limit(max_requests=3, window=300, scope='contact')
 def api_contact():
@@ -849,13 +796,11 @@ def api_contact():
     size = sanitize_string(data.get('size', ''), 20)
     message = sanitize_string(data.get('message', ''), 2000)
 
-    # Save to DB
     contact_id = str(uuid.uuid4())
     with get_db() as conn:
         ex(f"INSERT INTO contact_requests (id,name,email,company,size,message) VALUES ({PH},{PH},{PH},{PH},{PH},{PH})",
            (contact_id, name, email, company, size, message), conn)
 
-    # Email de confirmation au client
     send_email(
         to=email,
         subject=f"🌸 Merci {name.split()[0]} ! Votre demande a bien été reçue — Camélia",
@@ -863,7 +808,6 @@ def api_contact():
         html_body=build_confirmation_html(name.split()[0])
     )
 
-    # Notification à l'admin (toi)
     if ADMIN_EMAIL:
         send_email(
             to=ADMIN_EMAIL,
@@ -874,16 +818,10 @@ def api_contact():
 
     return jsonify({"message": "Message reçu"}), 201
 
-# ═══════════════════════════════════════════
-# JOIN PAGE (employee clicks invite link)
-# ═══════════════════════════════════════════
 @app.route('/join/<invite_code>')
 def join_page(invite_code):
     return render_template('join.html')
 
-# ═══════════════════════════════════════════
-# API — INVITATIONS
-# ═══════════════════════════════════════════
 @app.route('/api/invitations', methods=['GET'])
 @admin_required
 def list_invitations():
@@ -969,7 +907,6 @@ def accept_invitation(invite_code):
         if not invite:
             return jsonify({"error": "Invitation invalide ou déjà utilisée"}), 404
 
-        # Check employee quota before accepting
         ok, msg = check_employee_quota(conn, invite['company_id'], invite['plan'], q1, PH)
         if not ok:
             return jsonify({"error": msg}), 403
@@ -978,7 +915,6 @@ def accept_invitation(invite_code):
         if existing:
             return jsonify({"error": "Cet email est déjà utilisé"}), 409
 
-        # Auto-generate code
         last = q1(f"SELECT employee_code FROM employees WHERE company_id={PH} ORDER BY employee_code DESC LIMIT 1",
                   (invite['company_id'],), conn)
         try: next_num = int(last['employee_code'][1:]) + 1 if last else 1
@@ -1002,9 +938,6 @@ def accept_invitation(invite_code):
         "redirect": "/app"
     }), 201
 
-# ═══════════════════════════════════════════
-# API — EXPORTS (Pro/Enterprise only)
-# ═══════════════════════════════════════════
 def get_export_data(period='month', employee_id=None):
     """Fetch badges and employee info for export."""
     today = date.today()
@@ -1028,7 +961,6 @@ def get_export_data(period='month', employee_id=None):
         for e in emps:
             badges = q(f"SELECT * FROM badges WHERE employee_id={PH} AND company_id={PH} AND date>={PH} ORDER BY date",
                        (e['id'], session['company_id'], start.isoformat()), conn)
-            # Convert badge_date field name if needed
             clean_badges = []
             for b in badges:
                 cb = dict(b)
@@ -1050,7 +982,6 @@ def get_export_data(period='month', employee_id=None):
 @app.route('/api/export/excel')
 @admin_required
 def export_excel():
-    # Check plan
     with get_db() as conn:
         co = q1(f"SELECT plan FROM companies WHERE id={PH}", (session['company_id'],), conn)
     plan = co['plan'] if co else 'starter'
@@ -1076,7 +1007,6 @@ def export_excel():
 @app.route('/api/export/pdf')
 @admin_required
 def export_pdf():
-    # Check plan
     with get_db() as conn:
         co = q1(f"SELECT plan FROM companies WHERE id={PH}", (session['company_id'],), conn)
     plan = co['plan'] if co else 'starter'

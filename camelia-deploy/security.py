@@ -1,3 +1,4 @@
+# Camélia - Développé par EL-JAMII SAID, Strasbourg, France
 """
 Camélia — Security Module
 Rate limiting, input validation, plan quota enforcement.
@@ -8,9 +9,6 @@ import html
 from functools import wraps
 from flask import request, jsonify
 
-# ═══════════════════════════════════════════
-# RATE LIMITER (in-memory, per IP)
-# ═══════════════════════════════════════════
 class RateLimiter:
     def __init__(self):
         self._store = {}
@@ -48,9 +46,6 @@ def rate_limit(max_requests=10, window=60, scope='default'):
         return wrapped
     return decorator
 
-# ═══════════════════════════════════════════
-# INPUT VALIDATION
-# ═══════════════════════════════════════════
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
 def validate_email(email):
@@ -89,9 +84,6 @@ def sanitize_string(value, max_length=500):
         return ''
     return html.escape(value.strip()[:max_length])
 
-# ═══════════════════════════════════════════
-# PLAN QUOTAS
-# ═══════════════════════════════════════════
 PLAN_QUOTAS = {
     'starter':    {'max_employees': 10,  'max_admins': 1,  'max_invitations': 20},
     'pro':        {'max_employees': 100, 'max_admins': 5,  'max_invitations': 200},
@@ -122,9 +114,6 @@ def check_invitation_quota(conn, company_id, plan, q1_func, PH):
         return False, f"Limite de {quota['max_invitations']} invitations pour le plan {plan.title()}."
     return True, None
 
-# ═══════════════════════════════════════════
-# SECURE SESSION CONFIG
-# ═══════════════════════════════════════════
 def secure_session_config(app):
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
