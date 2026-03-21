@@ -719,8 +719,8 @@ async function renderEmployee(el) {
 
     <div class="badge-row">
       ${mkBadge(iLogin,"Arrivée",b?.arrival||"—","var(--success)","arrival",!!b?.arrival,!!b?.arrival)}
-      ${mkBadge(iCoffee,"Début pause",b?.breakStart||"—","var(--warning)","breakStart",!b?.arrival||!!b?.breakStart,!!b?.breakStart&&!b?.breakEnd)}
-      ${mkBadge(iPlay,"Fin pause",b?.breakEnd||"—","var(--blue)","breakEnd",!b?.breakStart||!!b?.breakEnd,!!b?.breakEnd)}
+      ${mkBadge(iCoffee,"Début pause",b?.breakStart||"—","var(--warning)","breakStart",!b?.arrival||!!b?.breakStart||!!b?.departure,!!b?.breakStart&&!b?.breakEnd)}
+      ${mkBadge(iPlay,"Fin pause",b?.breakEnd||"—","var(--blue)","breakEnd",!b?.breakStart||!!b?.breakEnd||!!b?.departure,!!b?.breakEnd)}
       ${mkBadge(iLogout,"Départ",b?.departure||"—","var(--danger)","departure",!b?.arrival||!!b?.departure,!!b?.departure)}
     </div>
 
