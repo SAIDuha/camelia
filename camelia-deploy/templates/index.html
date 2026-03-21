@@ -317,7 +317,7 @@ tbody tr:hover{background:var(--primary-light)}
         <div><span style="color:var(--muted)">Titulaire :</span> <strong>Camélia SAS</strong></div>
         <div><span style="color:var(--muted)">IBAN :</span> <strong style="font-family:monospace;font-size:12px">FR76 XXXX XXXX XXXX XXXX XXXX XXX</strong></div>
       </div>
-      <a href="/cdn-cgi/l/email-protection#fc9f9392889d9f88bc9f9d919990959dd29d8c8cc38f899e96999f88c1bd9f88958a9d88959392dc8c909d92dc1e7c68dc998f8f9d95dc88998e9195923f55" class="btn btn-primary btn-block" style="text-decoration:none;text-align:center">
+      <a href="mailto:contact@camelia.app?subject=Activation plan — essai terminé" class="btn btn-primary btn-block" style="text-decoration:none;text-align:center">
         Nous contacter pour activer
       </a>
     </div>
@@ -371,7 +371,7 @@ tbody tr:hover{background:var(--primary-light)}
 <div id="toast" class="toast"></div>
 <canvas id="snap-canvas" style="display:none"></canvas>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
@@ -1155,4 +1155,11 @@ async function doResendCode() {
     await api("/api/resend-code", {method:"POST"});
     toast("Nouveau code envoyé !");
   } catch(e) { toast(e.message, "error"); }
-  btn.dis
+  btn.disabled = false; btn.textContent = "Renvoyer le code";
+}
+
+document.getElementById("verify-code").addEventListener("keydown", e => { if(e.key==="Enter") doVerify(); });
+
+</script>
+</body>
+</html>
