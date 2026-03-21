@@ -64,22 +64,28 @@ a{color:var(--primary);text-decoration:none}
 @media(max-width:640px){.header{padding:10px 16px}.header .datetime{display:none}}
 
 /* ── Login ── */
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:0;position:relative;overflow:hidden}
-#login-screen::before{content:'';position:absolute;top:-20%;right:-15%;width:500px;height:500px;border-radius:50%;background:var(--rose-glow);filter:blur(80px);pointer-events:none}
-#login-screen::after{content:'';position:absolute;bottom:-15%;left:-10%;width:400px;height:400px;border-radius:50%;background:rgba(200,150,90,.04);filter:blur(60px);pointer-events:none}
-.login-split{display:flex;width:100%;min-height:100vh;position:relative;z-index:1}
-.login-left{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;background:linear-gradient(145deg,rgba(181,87,122,.04),rgba(181,87,122,.08));border-right:1px solid var(--border)}
-.login-brand{font-family:var(--font-display);font-size:42px;font-weight:700;letter-spacing:-1.5px;color:var(--text)}
-.login-tagline{color:var(--muted);font-size:15px;letter-spacing:.5px}
-.login-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px}
-.login-card{background:var(--card);border-radius:24px;padding:32px;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.06);max-width:420px;width:100%}
+#login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0;position:relative;overflow:hidden;background:var(--bg)}
+.login-header-top{width:100%;text-align:center;padding:48px 20px 24px;position:relative;z-index:1}
+.login-split{display:flex;width:100%;flex:1;position:relative;z-index:1}
+.login-left{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.login-left::before{content:'';position:absolute;top:30%;left:50%;transform:translateX(-50%);width:400px;height:400px;border-radius:50%;background:rgba(181,87,122,.04);filter:blur(100px);pointer-events:none}
+.login-left-content{position:relative;z-index:1;text-align:center;padding:40px}
+.login-brand{font-family:var(--font-display);font-size:44px;font-weight:700;letter-spacing:-1.5px;color:var(--text)}
+.login-tagline{color:var(--muted);font-size:14px;letter-spacing:1px;margin-top:6px}
+.login-left-features{display:flex;flex-direction:column;gap:14px;margin-top:40px}
+.login-feat{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted);font-weight:400}
+.login-feat svg{stroke:var(--muted)}
+.login-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;position:relative}
+.login-card{background:var(--card);border-radius:24px;padding:32px;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.06);max-width:420px;width:100%;position:relative;z-index:1}
 @media(max-width:768px){
-  .login-split{flex-direction:column}
-  .login-left{min-height:30vh;border-right:none;border-bottom:1px solid var(--border);padding:40px 20px}
-  .login-left svg{width:120px;height:120px}
-  .login-brand{font-size:32px}
-  .login-right{padding:24px}
+  .login-split{display:block}
+  .login-left{display:none}
+  .login-header-top{display:none}
+  .login-right{min-height:100vh;align-items:center;justify-content:center;padding:20px}
+  .login-card{max-width:400px}
+  .login-mobile-header{display:block;text-align:center;margin-bottom:32px}
 }
+.login-mobile-header{display:none}
 .form-group{margin-bottom:18px}
 .form-label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .form-input{width:100%;padding:12px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--input-bg);font-size:14px;font-family:var(--font-body);color:var(--text);outline:none;transition:border-color .2s}
@@ -230,20 +236,40 @@ tbody tr:hover{background:var(--primary-light)}
 <body>
 
 <div id="login-screen" class="fade-up">
+  <div class="login-header-top">
+    <h1 class="login-brand">Camélia</h1>
+    <p class="login-tagline">Système de pointage intelligent</p>
+    <div style="margin-top:10px;display:flex;justify-content:center"><button class="icon-btn" onclick="toggleTheme()" id="theme-btn-login"></button></div>
+  </div>
   <div class="login-split">
     <div class="login-left">
-      <svg id="login-clock" width="220" height="220" viewBox="0 0 120 120" fill="none" stroke-linecap="round">
-        <circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="2" opacity=".3"/>
-        <circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="2.5"/>
-        <line id="clock-hour" x1="60" y1="60" x2="60" y2="30" stroke="#B5577A" stroke-width="3" stroke-linecap="round"/>
-        <line id="clock-min" x1="60" y1="60" x2="82" y2="44" stroke="#B5577A" stroke-width="2" stroke-linecap="round"/>
-        <line id="clock-sec" x1="60" y1="60" x2="60" y2="20" stroke="#B5577A" stroke-width="1" stroke-linecap="round" opacity=".5"/>
-        <circle cx="60" cy="60" r="3" fill="#B5577A"/>
-      </svg>
-      <h1 class="login-brand">Camélia</h1>
-      <p class="login-tagline">Système de pointage intelligent</p>
+      <div class="login-left-content">
+        <svg id="login-clock" width="200" height="200" viewBox="0 0 120 120" fill="none" stroke-linecap="round">
+          <circle cx="60" cy="60" r="52" stroke="var(--border)" stroke-width="1"/>
+          <circle cx="60" cy="60" r="48" stroke="var(--primary)" stroke-width="2" opacity=".25"/>
+          <circle cx="60" cy="16" r="2" fill="var(--muted)" opacity=".4"/>
+          <circle cx="104" cy="60" r="2" fill="var(--muted)" opacity=".4"/>
+          <circle cx="60" cy="104" r="2" fill="var(--muted)" opacity=".4"/>
+          <circle cx="16" cy="60" r="2" fill="var(--muted)" opacity=".4"/>
+          <line id="clock-hour" x1="60" y1="60" x2="60" y2="30" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/>
+          <line id="clock-min" x1="60" y1="60" x2="82" y2="44" stroke="var(--text)" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+          <line id="clock-sec" x1="60" y1="60" x2="60" y2="20" stroke="#B5577A" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="60" cy="60" r="4" fill="#B5577A"/>
+          <circle cx="60" cy="60" r="2" fill="var(--bg)"/>
+        </svg>
+        <div class="login-left-features">
+          <div class="login-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Preuve photo à chaque badge</span></div>
+          <div class="login-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span>Dashboard temps réel</span></div>
+          <div class="login-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg><span>Export Excel & PDF en 1 clic</span></div>
+        </div>
+      </div>
     </div>
     <div class="login-right">
+      <div class="login-mobile-header">
+        <svg width="44" height="44" viewBox="0 0 120 120" fill="none" stroke-linecap="round"><circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="60" y2="26" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="82" y2="44" stroke="#B5577A" stroke-width="2.5"/><circle cx="60" cy="60" r="4" fill="#B5577A"/></svg>
+        <h1 style="font-family:var(--font-display);font-size:32px;font-weight:700;margin-top:12px">Camélia</h1>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px">Système de pointage intelligent</p>
+      </div>
       <div class="login-card">
         <div style="display:flex;gap:4px;margin-bottom:22px;background:var(--input-bg);border-radius:10px;padding:3px">
           <button class="tab active" id="tab-login" onclick="switchAuthTab('login')" style="flex:1;margin:0;border:none;border-radius:8px">Connexion</button>
@@ -269,7 +295,6 @@ tbody tr:hover{background:var(--primary-light)}
             Creer mon entreprise</button>
         </div>
       </div>
-      <div style="display:flex;justify-content:center;margin-top:16px"><button class="icon-btn" onclick="toggleTheme()" id="theme-btn-login"></button></div>
     </div>
   </div>
 </div>
