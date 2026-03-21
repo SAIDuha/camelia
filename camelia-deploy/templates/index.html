@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- Camélia - Développé par EL-JAMII SAID, Strasbourg, France -->
+
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -45,7 +47,6 @@ a{color:var(--primary);text-decoration:none}
 .container{max-width:1100px;margin:0 auto;padding:28px}
 @media(max-width:640px){.container{padding:16px}}
 
-/* ── Header ── */
 .header{display:none;align-items:center;justify-content:space-between;padding:12px 28px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:rgba(255,255,255,.8)}
 [data-theme="dark"] .header{background:rgba(24,24,28,.85)}
 .header .logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:-.5px}
@@ -62,7 +63,6 @@ a{color:var(--primary);text-decoration:none}
 .btn-link:hover{color:var(--primary)}
 @media(max-width:640px){.header{padding:10px 16px}.header .datetime{display:none}}
 
-/* ── Login ── */
 #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
 #login-screen::before{content:'';position:absolute;top:-20%;right:-15%;width:500px;height:500px;border-radius:50%;background:var(--rose-glow);filter:blur(80px);pointer-events:none}
 #login-screen::after{content:'';position:absolute;bottom:-15%;left:-10%;width:400px;height:400px;border-radius:50%;background:rgba(200,150,90,.04);filter:blur(60px);pointer-events:none}
@@ -82,7 +82,6 @@ a{color:var(--primary);text-decoration:none}
 .form-select:focus{border-color:var(--primary)}
 .form-error{color:var(--danger);font-size:13px;margin-bottom:12px;font-weight:500;display:none}
 
-/* ── Buttons ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border:none;border-radius:100px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all .3s}
 .btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.4;cursor:default;transform:none}
 .btn-primary{background:var(--primary);color:#fff}
@@ -96,7 +95,6 @@ a{color:var(--primary);text-decoration:none}
 .btn-back:hover{text-decoration:underline}
 .login-demo{text-align:center;margin-top:20px;font-size:12px;color:var(--muted)}.login-demo strong{font-weight:700}
 
-/* ── Badge Buttons ── */
 .badge-row{display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap}
 .badge-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:24px 18px;border-radius:22px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .3s;flex:1 1 120px;min-width:120px;font-family:var(--font-body)}
 .badge-btn:hover:not(:disabled){transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.06)}
@@ -105,7 +103,6 @@ a{color:var(--primary);text-decoration:none}
 .badge-btn .b-label{font-size:14px;font-weight:600;color:var(--text)}
 .badge-btn .b-sub{font-size:11px;color:var(--muted)}
 
-/* ── Stat Cards ── */
 .stats-row{display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap}
 .stat-card{background:var(--card);border-radius:20px;padding:22px;border:1px solid var(--border);flex:1 1 160px;min-width:160px;transition:all .3s}
 .stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,.06)}
@@ -115,24 +112,20 @@ a{color:var(--primary);text-decoration:none}
 .stat-card .s-value{font-size:28px;font-weight:700;font-family:var(--font-display);line-height:1.1}
 .stat-card .s-sub{font-size:12px;color:var(--muted);margin-top:6px}
 
-/* ── Tabs ── */
 .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
 .tab{padding:7px 18px;border-radius:100px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:all .2s}
 .tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .tab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
 
-/* ── Cards ── */
 .card{background:var(--card);border-radius:22px;padding:22px;border:1px solid var(--border);margin-bottom:24px}
 .card h4{font-size:15px;font-weight:600;font-family:var(--font-display);margin-bottom:14px}
 
-/* ── Mini Bars ── */
 .mini-bars{display:flex;align-items:flex-end;gap:4px;height:60px}
 .mini-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
 .mini-bar .bar{width:100%;min-width:8px;border-radius:6px;background:var(--primary-light);transition:height .5s ease}
 .mini-bar .bar.today{background:var(--primary)}
 .mini-bar .lbl{font-size:9px;color:var(--muted)}
 
-/* ── Table ── */
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border)}
 tbody td{padding:10px 12px;border-bottom:1px solid var(--border)}
@@ -144,7 +137,6 @@ tbody tr:hover{background:var(--primary-light)}
 .td-photo img{width:32px;height:32px;border-radius:8px;object-fit:cover;cursor:pointer;border:1px solid var(--border);transition:transform .2s}
 .td-photo img:hover{transform:scale(1.1)}
 
-/* ── Team List ── */
 .team-list{display:flex;flex-direction:column;gap:8px}
 .team-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .3s}
 .team-row:hover{background:var(--primary-light);border-color:var(--primary);transform:translateX(4px)}
@@ -159,7 +151,6 @@ tbody tr:hover{background:var(--primary-light)}
 .team-row .thumb{width:36px;height:36px;border-radius:10px;object-fit:cover;border:2px solid var(--border)}
 .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
 
-/* ── Modal ── */
 .modal-backdrop{display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(12px)}
 .modal-backdrop.open{display:flex}
 .modal{background:var(--card);border-radius:24px;padding:32px;max-width:520px;width:92%;box-shadow:0 30px 100px rgba(0,0,0,.2);position:relative;max-height:90vh;overflow-y:auto;animation:fadeUp .3s cubic-bezier(.16,1,.3,1)}
@@ -168,7 +159,6 @@ tbody tr:hover{background:var(--primary-light)}
 .modal .close-btn:hover{background:var(--danger-light);color:var(--danger)}
 .modal h3{margin-bottom:20px;font-family:var(--font-display);font-weight:600;font-size:20px;display:flex;align-items:center;gap:8px}
 
-/* ── Webcam ── */
 .webcam-preview{position:relative;border-radius:20px;overflow:hidden;background:#000}
 .webcam-preview video{width:100%;display:block;transform:scaleX(-1)}
 .webcam-error{padding:40px;text-align:center;color:var(--danger)}
@@ -176,41 +166,33 @@ tbody tr:hover{background:var(--primary-light)}
 .countdown-num{font-size:80px;font-weight:800;color:#fff;font-family:var(--font-display);text-shadow:0 4px 30px rgba(0,0,0,.5);animation:countPulse .5s ease}
 .flash-overlay{position:absolute;inset:0;background:#fff;animation:flashOut .3s ease forwards}
 
-/* ── Lightbox ── */
 #lightbox{display:none;position:fixed;inset:0;z-index:1001;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;cursor:pointer}
 #lightbox.open{display:flex}
 #lightbox img{max-width:90%;max-height:85vh;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 
-/* ── Page Title ── */
 .page-title{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:4px;letter-spacing:-.5px}
 .page-sub{display:flex;align-items:center;gap:8px;margin-bottom:28px;flex-wrap:wrap}
 .page-sub span{font-size:14px;color:var(--muted)}
 
-/* ── Emp Header ── */
 .emp-header{display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap}
 .emp-header .meta h2{margin:0}.emp-header .meta p{color:var(--muted);font-size:14px;margin:0}
 
-/* ── Spinner ── */
 .spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
 .page-spinner{display:flex;justify-content:center;padding:60px}
 
-/* ── Nav Tabs (Admin) ── */
 .nav-tabs{display:flex;gap:4px;margin-bottom:28px;background:var(--bg-alt);border-radius:100px;padding:4px;border:1px solid var(--border);width:fit-content}
 .nav-tab{padding:8px 20px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);color:var(--muted);transition:all .2s;border:none;background:none}
 .nav-tab.active{background:var(--primary);color:#fff;box-shadow:0 4px 12px var(--rose-glow)}
 .nav-tab:hover:not(.active){color:var(--text)}
 
-/* ── Badge in table ── */
 .role-badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.5px}
 .role-badge.admin{background:var(--primary-light);color:var(--primary)}
 .role-badge.employee{background:var(--blue-light);color:var(--blue)}
 
-/* ── Toast ── */
 .toast{position:fixed;bottom:24px;right:24px;z-index:2000;padding:14px 24px;border-radius:100px;font-size:14px;font-weight:500;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.15);animation:fadeUp .3s cubic-bezier(.16,1,.3,1);font-family:var(--font-body);display:none}
 .toast.success{background:var(--success);display:block}
 .toast.error{background:var(--danger);display:block}
 
-/* ── Responsive ── */
 @media(max-width:640px){
   .stats-row{gap:10px}.stat-card{min-width:130px;padding:14px 16px}.stat-card .s-value{font-size:22px}
   .badge-btn{min-width:100px;padding:16px 10px}
@@ -221,7 +203,6 @@ tbody tr:hover{background:var(--primary-light)}
 </head>
 <body>
 
-<!-- ══════════ LOGIN ══════════ -->
 <div id="login-screen" class="fade-up">
   <div class="login-box">
     <div class="login-logo">
@@ -260,7 +241,6 @@ tbody tr:hover{background:var(--primary-light)}
   </div>
 </div>
 
-<!-- ══════════ VERIFICATION SCREEN ══════════ -->
 <div id="verify-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px">
   <div class="auth-box fade-up" style="max-width:420px">
     <div style="text-align:center;margin-bottom:28px">
@@ -289,7 +269,6 @@ tbody tr:hover{background:var(--primary-light)}
   </div>
 </div>
 
-<!-- ══════════ TRIAL EXPIRED SCREEN ══════════ -->
 <div id="trial-expired-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px;background:var(--bg)">
   <div class="auth-box fade-up" style="max-width:500px;text-align:center">
     <div style="font-size:60px;margin-bottom:16px">🌸</div>
@@ -317,7 +296,7 @@ tbody tr:hover{background:var(--primary-light)}
         <div><span style="color:var(--muted)">Titulaire :</span> <strong>Camélia SAS</strong></div>
         <div><span style="color:var(--muted)">IBAN :</span> <strong style="font-family:monospace;font-size:12px">FR76 XXXX XXXX XXXX XXXX XXXX XXX</strong></div>
       </div>
-      <a href="mailto:contact@camelia.app?subject=Activation plan — essai terminé" class="btn btn-primary btn-block" style="text-decoration:none;text-align:center">
+      <a href="/cdn-cgi/l/email-protection#57343839233634231734363a323b3e3679362727682422353d3234236a1634233e2136233e383977273b363977b5d7c377322424363e772332253a3e3994fe" class="btn btn-primary btn-block" style="text-decoration:none;text-align:center">
         Nous contacter pour activer
       </a>
     </div>
@@ -325,12 +304,10 @@ tbody tr:hover{background:var(--primary-light)}
   </div>
 </div>
 
-<!-- ══════════ TRIAL BANNER ══════════ -->
 <div id="trial-banner" style="display:none;background:linear-gradient(90deg,var(--primary),#c77dba);color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:500;font-family:var(--font-body)">
   <span id="trial-banner-text"></span>
 </div>
 
-<!-- ══════════ HEADER ══════════ -->
 <header class="header" id="app-header">
   <div class="logo">
     <svg width="28" height="28" viewBox="0 0 120 120" fill="none" stroke-linecap="round"><circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="60" y2="26" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="82" y2="44" stroke="#B5577A" stroke-width="2.5"/><circle cx="60" cy="60" r="4" fill="#B5577A"/></svg>
@@ -347,10 +324,8 @@ tbody tr:hover{background:var(--primary-light)}
   </div>
 </header>
 
-<!-- ══════════ MAIN ══════════ -->
 <main id="app-content" class="container" style="display:none"></main>
 
-<!-- ══════════ MODALS ══════════ -->
 <div class="modal-backdrop" id="webcam-modal">
   <div class="modal">
     <button class="close-btn" onclick="closeWebcam()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
@@ -375,22 +350,17 @@ tbody tr:hover{background:var(--primary-light)}
 <div id="toast" class="toast"></div>
 <canvas id="snap-canvas" style="display:none"></canvas>
 
-<script>
-// ═══════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
 let user = null;
 let currentAction = null;
 let mediaStream = null;
 let viewPeriod = "week";
-let adminPage = "dashboard"; // dashboard | employees | employee-detail
+let adminPage = "dashboard"; 
 let selectedEmpId = null;
 
 const statusColors = {absent:"var(--muted)","présent":"var(--success)",pause:"var(--warning)",parti:"var(--primary)"};
 
-// ═══════════════════════════════════════════
-// API HELPERS
-// ═══════════════════════════════════════════
 async function api(url, opts = {}) {
   const res = await fetch(url, {
     headers: {"Content-Type":"application/json", ...opts.headers},
@@ -413,9 +383,6 @@ function weekNum() {
   return 1+Math.round(((d-w1)/864e5-3+((w1.getDay()+6)%7))/7);
 }
 
-// ═══════════════════════════════════════════
-// THEME
-// ═══════════════════════════════════════════
 let darkMode = localStorage.getItem("camelia-dark") === "true";
 function applyTheme() {
   document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
@@ -427,9 +394,6 @@ function applyTheme() {
 function toggleTheme() { darkMode = !darkMode; localStorage.setItem("camelia-dark", darkMode); applyTheme(); }
 applyTheme();
 
-// ═══════════════════════════════════════════
-// CLOCK
-// ═══════════════════════════════════════════
 function updateClock() {
   const now = new Date();
   const el = document.getElementById("header-datetime");
@@ -441,18 +405,12 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 
-// ═══════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════
 function toast(msg, type = "success") {
   const el = document.getElementById("toast");
   el.textContent = msg; el.className = `toast ${type}`;
   setTimeout(() => el.className = "toast", 3000);
 }
 
-// ═══════════════════════════════════════════
-// AUTH
-// ═══════════════════════════════════════════
 function switchAuthTab(tab) {
   document.getElementById('form-login').style.display = tab==='login'?'block':'none';
   document.getElementById('form-register').style.display = tab==='register'?'block':'none';
@@ -464,7 +422,7 @@ function enterApp(u) {
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("verify-screen").style.display = "none";
 
-  // Check trial status
+  
   const trial = u.trial;
   if (trial && trial.expired && !trial.isPaid) {
     document.getElementById("trial-expired-screen").style.display = "flex";
@@ -479,7 +437,7 @@ function enterApp(u) {
   document.getElementById("app-content").style.display = "block";
   document.getElementById("header-avatar").textContent = user.avatar;
 
-  // Show trial banner if on trial
+  
   if (trial && !trial.isPaid && trial.daysLeft !== null) {
     const banner = document.getElementById("trial-banner");
     const text = document.getElementById("trial-banner-text");
@@ -536,9 +494,6 @@ document.getElementById("login-password").addEventListener("keydown",e=>{if(e.ke
 document.getElementById("login-email").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("login-password").focus();});
 document.getElementById("reg-password").addEventListener("keydown",e=>{if(e.key==="Enter")doRegister();});
 
-// ═══════════════════════════════════════════
-// WEBCAM
-// ═══════════════════════════════════════════
 function openWebcam(action) {
   currentAction = action;
   const modal = document.getElementById("webcam-modal");
@@ -602,15 +557,9 @@ async function doPunch(action, photo) {
   } catch(e) { toast(e.message, "error"); }
 }
 
-// ═══════════════════════════════════════════
-// LIGHTBOX
-// ═══════════════════════════════════════════
 function openLightbox(src) { document.getElementById("lightbox-img").src = src; document.getElementById("lightbox").classList.add("open"); }
 function closeLightbox() { document.getElementById("lightbox").classList.remove("open"); }
 
-// ═══════════════════════════════════════════
-// RENDER ROUTER
-// ═══════════════════════════════════════════
 async function render() {
   const el = document.getElementById("app-content");
   if (!user) return;
@@ -631,9 +580,6 @@ function setAdminPage(page) { adminPage = page; render(); }
 function setPeriod(p) { viewPeriod = p; render(); }
 function goToDetail(empId) { selectedEmpId = empId; adminPage = "employee-detail"; viewPeriod = "week"; render(); }
 
-// ═══════════════════════════════════════════
-// ADMIN NAV
-// ═══════════════════════════════════════════
 function adminNav() {
   return `<div class="nav-tabs">
     <button class="nav-tab ${adminPage==="dashboard"?"active":""}" onclick="setAdminPage('dashboard')">Tableau de bord</button>
@@ -642,9 +588,6 @@ function adminNav() {
   </div>`;
 }
 
-// ═══════════════════════════════════════════
-// BARS + PERIOD + TABLE HELPERS
-// ═══════════════════════════════════════════
 function barsHTML(data) {
   const max = Math.max(...data.map(d=>d.value),1);
   return `<div class="mini-bars">${data.map(d =>
@@ -691,9 +634,6 @@ function historyTable(badges, showPhoto) {
   </div>`;
 }
 
-// ═══════════════════════════════════════════
-// EMPLOYEE VIEW
-// ═══════════════════════════════════════════
 async function renderEmployee(el) {
   const [todayBadge, stats, badges] = await Promise.all([
     api("/api/badges/today"),
@@ -743,9 +683,6 @@ async function renderEmployee(el) {
   </div>`;
 }
 
-// ═══════════════════════════════════════════
-// ADMIN DASHBOARD
-// ═══════════════════════════════════════════
 async function renderAdminDashboard(el) {
   const data = await api("/api/dashboard");
   const { team, summary } = data;
@@ -784,9 +721,6 @@ async function renderAdminDashboard(el) {
   </div>`;
 }
 
-// ═══════════════════════════════════════════
-// ADMIN EMPLOYEES LIST (CRUD)
-// ═══════════════════════════════════════════
 async function renderAdminEmployees(el) {
   const [employees, invites] = await Promise.all([
     api("/api/employees"),
@@ -850,9 +784,6 @@ async function renderAdminEmployees(el) {
   </div>`;
 }
 
-// ═══════════════════════════════════════════
-// EMPLOYEE MODAL (Create / Edit)
-// ═══════════════════════════════════════════
 function openNewEmployee() {
   document.getElementById("emp-modal-title").textContent = "Nouvel employé";
   document.getElementById("emp-modal-body").innerHTML = employeeForm({});
@@ -934,9 +865,6 @@ async function toggleEmployee(empId, activate) {
   } catch(e) { toast(e.message, "error"); }
 }
 
-// ═══════════════════════════════════════════
-// INVITATIONS
-// ═══════════════════════════════════════════
 async function createInviteLink() {
   try {
     const res = await api('/api/invitations', {method:'POST', body:{role:'employee'}});
@@ -954,9 +882,6 @@ async function deleteInvite(inviteId) {
   } catch(e) { toast(e.message, 'error'); }
 }
 
-// ═══════════════════════════════════════════
-// ADMIN EMPLOYEE DETAIL
-// ═══════════════════════════════════════════
 async function renderAdminDetail(el) {
   const employees = await api("/api/employees");
   const emp = employees.find(e => e.id === selectedEmpId);
@@ -996,9 +921,6 @@ async function renderAdminDetail(el) {
   </div>`;
 }
 
-// ═══════════════════════════════════════════
-// BILLING PAGE
-// ═══════════════════════════════════════════
 async function renderAdminBilling(el) {
   let planData;
   try { planData = await api("/api/plan"); }
@@ -1078,9 +1000,6 @@ async function renderAdminBilling(el) {
   </div>`;
 }
 
-// ═══════════════════════════════════════════
-// EXPORTS
-// ═══════════════════════════════════════════
 async function exportFile(type, period, employeeId) {
   let url = `/api/export/${type}?period=${period || 'month'}`;
   if (employeeId) url += `&employee_id=${employeeId}`;
@@ -1102,9 +1021,6 @@ async function exportFile(type, period, employeeId) {
   } catch(e) { toast(e.message, 'error'); }
 }
 
-// ═══════════════════════════════════════════
-// EMAIL VERIFICATION
-// ═══════════════════════════════════════════
 function showVerifyScreen(email) {
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("verify-screen").style.display = "flex";
@@ -1143,11 +1059,4 @@ async function doResendCode() {
     await api("/api/resend-code", {method:"POST"});
     toast("Nouveau code envoyé !");
   } catch(e) { toast(e.message, "error"); }
-  btn.disabled = false; btn.textContent = "Renvoyer le code";
-}
-
-document.getElementById("verify-code").addEventListener("keydown", e => { if(e.key==="Enter") doVerify(); });
-
-</script>
-</body>
-</html>
+  btn.dis
