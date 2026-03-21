@@ -118,8 +118,8 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Tabs ── */
 .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.tab{padding:7px 18px;border-radius:100px;border:none;background:none;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:color .35s ease}
-.tab.active{color:#fff}
+.tab{padding:7px 18px;border-radius:100px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:all .2s}
+.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .tab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
 
 /* ── Cards ── */
@@ -196,11 +196,10 @@ tbody tr:hover{background:var(--primary-light)}
 .page-spinner{display:flex;justify-content:center;padding:60px}
 
 /* ── Nav Tabs (Admin) ── */
-.nav-tabs{position:relative;display:flex;gap:0;margin-bottom:28px;background:var(--bg-alt);border-radius:100px;padding:4px;border:1px solid var(--border);width:fit-content}
-.nav-tab{position:relative;z-index:2;padding:8px 22px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);color:var(--muted);transition:color .35s ease;border:none;background:none}
-.nav-tab.active{color:#fff}
+.nav-tabs{display:flex;gap:4px;margin-bottom:28px;background:var(--bg-alt);border-radius:100px;padding:4px;border:1px solid var(--border);width:fit-content}
+.nav-tab{padding:8px 20px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);color:var(--muted);transition:all .2s;border:none;background:none}
+.nav-tab.active{background:var(--primary);color:#fff;box-shadow:0 4px 12px var(--rose-glow)}
 .nav-tab:hover:not(.active){color:var(--text)}
-.nav-slider{position:absolute;top:4px;left:4px;height:calc(100% - 8px);border-radius:100px;background:var(--primary);z-index:1;transition:transform .4s cubic-bezier(.4,.0,.2,1),width .4s cubic-bezier(.4,.0,.2,1);box-shadow:0 4px 14px var(--rose-glow)}
 
 /* ── Badge in table ── */
 .role-badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.5px}
@@ -233,10 +232,9 @@ tbody tr:hover{background:var(--primary-light)}
       <p>Système de pointage intelligent</p>
     </div>
     <div class="login-card">
-      <div id="auth-tabs" style="position:relative;display:flex;margin-bottom:22px;background:var(--input-bg);border-radius:100px;padding:3px">
-        <div id="auth-slider" style="position:absolute;top:3px;left:3px;width:50%;height:calc(100% - 6px);border-radius:100px;background:var(--primary);transition:transform .4s cubic-bezier(.4,.0,.2,1);box-shadow:0 4px 14px var(--rose-glow);z-index:0"></div>
-        <button class="tab active" id="tab-login" onclick="switchAuthTab('login')" style="flex:1;margin:0;border:none;border-radius:100px;position:relative;z-index:1;background:none">Connexion</button>
-        <button class="tab" id="tab-register" onclick="switchAuthTab('register')" style="flex:1;margin:0;border:none;border-radius:100px;position:relative;z-index:1;background:none">Inscription</button>
+      <div style="display:flex;gap:4px;margin-bottom:22px;background:var(--input-bg);border-radius:10px;padding:3px">
+        <button class="tab active" id="tab-login" onclick="switchAuthTab('login')" style="flex:1;margin:0;border:none;border-radius:8px">Connexion</button>
+        <button class="tab" id="tab-register" onclick="switchAuthTab('register')" style="flex:1;margin:0;border:none;border-radius:8px">Inscription</button>
       </div>
       <div id="form-login">
         <div class="form-group"><label class="form-label">Email</label><input id="login-email" class="form-input" type="email" placeholder="vous@entreprise.com" autocomplete="email"></div>
@@ -454,25 +452,7 @@ function switchAuthTab(tab) {
   document.getElementById('form-register').style.display = tab==='register'?'block':'none';
   document.getElementById('tab-login').classList.toggle('active',tab==='login');
   document.getElementById('tab-register').classList.toggle('active',tab==='register');
-  const slider = document.getElementById('auth-slider');
-  if (slider) slider.style.transform = tab==='login' ? 'translateX(0)' : 'translateX(100%)';
 }
-
-(function initSwipe() {
-  function setup() {
-    const el = document.getElementById('auth-tabs');
-    if (!el) return setTimeout(setup, 200);
-    let sx = 0;
-    el.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
-    el.addEventListener('touchend', e => {
-      const diff = e.changedTouches[0].clientX - sx;
-      if (diff < -40) switchAuthTab('register');
-      else if (diff > 40) switchAuthTab('login');
-    });
-  }
-  setup();
-})();
-
 function enterApp(u) {
   user = u;
   document.getElementById("login-screen").style.display = "none";
@@ -639,7 +619,6 @@ async function render() {
       await renderEmployee(el);
     }
   } catch(e) { el.innerHTML = `<div style="text-align:center;padding:60px;color:var(--danger)">${e.message}</div>`; }
-  requestAnimationFrame(() => updateNavSlider());
 }
 
 function setAdminPage(page) { adminPage = page; render(); }
@@ -650,45 +629,11 @@ function goToDetail(empId) { selectedEmpId = empId; adminPage = "employee-detail
 // ADMIN NAV
 // ═══════════════════════════════════════════
 function adminNav() {
-  return `<div class="nav-tabs" id="nav-tabs-container">
-    <div class="nav-slider" id="nav-slider"></div>
+  return `<div class="nav-tabs">
     <button class="nav-tab ${adminPage==="dashboard"?"active":""}" onclick="setAdminPage('dashboard')">Tableau de bord</button>
     <button class="nav-tab ${adminPage==="employees"?"active":""}" onclick="setAdminPage('employees')">Employés</button>
     <button class="nav-tab ${adminPage==="billing"?"active":""}" onclick="setAdminPage('billing')">Abonnement</button>
   </div>`;
-}
-
-function updateNavSlider() {
-  const container = document.getElementById('nav-tabs-container');
-  const slider = document.getElementById('nav-slider');
-  if (!container || !slider) return;
-  const active = container.querySelector('.nav-tab.active');
-  if (!active) return;
-  const cRect = container.getBoundingClientRect();
-  const aRect = active.getBoundingClientRect();
-  slider.style.width = aRect.width + 'px';
-  slider.style.transform = 'translateX(' + (aRect.left - cRect.left - 4) + 'px)';
-  initNavDrag(container);
-}
-
-function initNavDrag(container) {
-  if (container._dragInit) return;
-  container._dragInit = true;
-  const pages = ['dashboard','employees','billing'];
-  let startX = 0;
-  function onStart(e) { startX = (e.touches ? e.touches[0].clientX : e.clientX); }
-  function onEnd(e) {
-    const endX = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX);
-    const diff = endX - startX;
-    if (Math.abs(diff) < 40) return;
-    const idx = pages.indexOf(adminPage);
-    if (diff < -40 && idx < pages.length - 1) setAdminPage(pages[idx + 1]);
-    else if (diff > 40 && idx > 0) setAdminPage(pages[idx - 1]);
-  }
-  container.addEventListener('mousedown', onStart);
-  container.addEventListener('touchstart', onStart, {passive: true});
-  container.addEventListener('mouseup', onEnd);
-  container.addEventListener('touchend', onEnd);
 }
 
 // ═══════════════════════════════════════════
