@@ -118,8 +118,8 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Tabs ── */
 .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.tab{padding:7px 18px;border-radius:100px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:all .2s}
-.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.tab{padding:7px 18px;border-radius:100px;border:none;background:none;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:color .35s ease}
+.tab.active{color:#fff}
 .tab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
 
 /* ── Cards ── */
@@ -196,10 +196,11 @@ tbody tr:hover{background:var(--primary-light)}
 .page-spinner{display:flex;justify-content:center;padding:60px}
 
 /* ── Nav Tabs (Admin) ── */
-.nav-tabs{display:flex;gap:4px;margin-bottom:28px;background:var(--bg-alt);border-radius:100px;padding:4px;border:1px solid var(--border);width:fit-content}
-.nav-tab{padding:8px 20px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);color:var(--muted);transition:all .2s;border:none;background:none}
-.nav-tab.active{background:var(--primary);color:#fff;box-shadow:0 4px 12px var(--rose-glow)}
+.nav-tabs{position:relative;display:flex;gap:0;margin-bottom:28px;background:var(--bg-alt);border-radius:100px;padding:4px;border:1px solid var(--border);width:fit-content}
+.nav-tab{position:relative;z-index:2;padding:8px 22px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-body);color:var(--muted);transition:color .35s ease;border:none;background:none}
+.nav-tab.active{color:#fff}
 .nav-tab:hover:not(.active){color:var(--text)}
+.nav-slider{position:absolute;top:4px;left:4px;height:calc(100% - 8px);border-radius:100px;background:var(--primary);z-index:1;transition:transform .4s cubic-bezier(.4,.0,.2,1),width .4s cubic-bezier(.4,.0,.2,1);box-shadow:0 4px 14px var(--rose-glow)}
 
 /* ── Badge in table ── */
 .role-badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.5px}
@@ -232,9 +233,10 @@ tbody tr:hover{background:var(--primary-light)}
       <p>Système de pointage intelligent</p>
     </div>
     <div class="login-card">
-      <div style="display:flex;gap:4px;margin-bottom:22px;background:var(--input-bg);border-radius:10px;padding:3px">
-        <button class="tab active" id="tab-login" onclick="switchAuthTab('login')" style="flex:1;margin:0;border:none;border-radius:8px">Connexion</button>
-        <button class="tab" id="tab-register" onclick="switchAuthTab('register')" style="flex:1;margin:0;border:none;border-radius:8px">Inscription</button>
+      <div id="auth-tabs" style="position:relative;display:flex;margin-bottom:22px;background:var(--input-bg);border-radius:100px;padding:3px">
+        <div id="auth-slider" style="position:absolute;top:3px;left:3px;width:50%;height:calc(100% - 6px);border-radius:100px;background:var(--primary);transition:transform .4s cubic-bezier(.4,.0,.2,1);box-shadow:0 4px 14px var(--rose-glow);z-index:0"></div>
+        <button class="tab active" id="tab-login" onclick="switchAuthTab('login')" style="flex:1;margin:0;border:none;border-radius:100px;position:relative;z-index:1;background:none">Connexion</button>
+        <button class="tab" id="tab-register" onclick="switchAuthTab('register')" style="flex:1;margin:0;border:none;border-radius:100px;position:relative;z-index:1;background:none">Inscription</button>
       </div>
       <div id="form-login">
         <div class="form-group"><label class="form-label">Email</label><input id="login-email" class="form-input" type="email" placeholder="vous@entreprise.com" autocomplete="email"></div>
@@ -315,7 +317,7 @@ tbody tr:hover{background:var(--primary-light)}
         <div><span style="color:var(--muted)">Titulaire :</span> <strong>Camélia SAS</strong></div>
         <div><span style="color:var(--muted)">IBAN :</span> <strong style="font-family:monospace;font-size:12px">FR76 XXXX XXXX XXXX XXXX XXXX XXX</strong></div>
       </div>
-      <a href="mailto:contact@camelia.app?subject=Activation plan — essai terminé" class="btn btn-primary btn-block" style="text-decoration:none;text-align:center">
+      <a href="/cdn-cgi/l/email-protection#fc9f9392889d9f88bc9f9d919990959dd29d8c8cc38f899e96999f88c1bd9f88958a9d88959392dc8c909d92dc1e7c68dc998f8f9d95dc88998e9195923f55" class="btn btn-primary btn-block" style="text-decoration:none;text-align:center">
         Nous contacter pour activer
       </a>
     </div>
@@ -369,7 +371,7 @@ tbody tr:hover{background:var(--primary-light)}
 <div id="toast" class="toast"></div>
 <canvas id="snap-canvas" style="display:none"></canvas>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
@@ -452,6 +454,8 @@ function switchAuthTab(tab) {
   document.getElementById('form-register').style.display = tab==='register'?'block':'none';
   document.getElementById('tab-login').classList.toggle('active',tab==='login');
   document.getElementById('tab-register').classList.toggle('active',tab==='register');
+  const slider = document.getElementById('auth-slider');
+  if (slider) slider.style.transform = tab==='login' ? 'translateX(0)' : 'translateX(100%)';
 }
 function enterApp(u) {
   user = u;
@@ -619,6 +623,7 @@ async function render() {
       await renderEmployee(el);
     }
   } catch(e) { el.innerHTML = `<div style="text-align:center;padding:60px;color:var(--danger)">${e.message}</div>`; }
+  requestAnimationFrame(() => updateNavSlider());
 }
 
 function setAdminPage(page) { adminPage = page; render(); }
@@ -629,11 +634,24 @@ function goToDetail(empId) { selectedEmpId = empId; adminPage = "employee-detail
 // ADMIN NAV
 // ═══════════════════════════════════════════
 function adminNav() {
-  return `<div class="nav-tabs">
+  return `<div class="nav-tabs" id="nav-tabs-container">
+    <div class="nav-slider" id="nav-slider"></div>
     <button class="nav-tab ${adminPage==="dashboard"?"active":""}" onclick="setAdminPage('dashboard')">Tableau de bord</button>
     <button class="nav-tab ${adminPage==="employees"?"active":""}" onclick="setAdminPage('employees')">Employés</button>
     <button class="nav-tab ${adminPage==="billing"?"active":""}" onclick="setAdminPage('billing')">Abonnement</button>
   </div>`;
+}
+
+function updateNavSlider() {
+  const container = document.getElementById('nav-tabs-container');
+  const slider = document.getElementById('nav-slider');
+  if (!container || !slider) return;
+  const active = container.querySelector('.nav-tab.active');
+  if (!active) return;
+  const cRect = container.getBoundingClientRect();
+  const aRect = active.getBoundingClientRect();
+  slider.style.width = aRect.width + 'px';
+  slider.style.transform = 'translateX(' + (aRect.left - cRect.left - 4) + 'px)';
 }
 
 // ═══════════════════════════════════════════
@@ -1137,11 +1155,4 @@ async function doResendCode() {
     await api("/api/resend-code", {method:"POST"});
     toast("Nouveau code envoyé !");
   } catch(e) { toast(e.message, "error"); }
-  btn.disabled = false; btn.textContent = "Renvoyer le code";
-}
-
-document.getElementById("verify-code").addEventListener("keydown", e => { if(e.key==="Enter") doVerify(); });
-
-</script>
-</body>
-</html>
+  btn.dis
