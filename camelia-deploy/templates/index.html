@@ -171,7 +171,7 @@ tbody tr:hover{background:var(--primary-light)}
 
 /* ── Webcam ── */
 .webcam-preview{position:relative;border-radius:20px;overflow:hidden;background:#000}
-.webcam-preview video{width:100%;display:block;transform:scaleX(-1)}
+.webcam-preview video{width:100%;display:block}
 .webcam-error{padding:40px;text-align:center;color:var(--danger)}
 .countdown-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4)}
 .countdown-num{font-size:80px;font-weight:800;color:#fff;font-family:var(--font-display);text-shadow:0 4px 30px rgba(0,0,0,.5);animation:countPulse .5s ease}
@@ -542,7 +542,7 @@ function openWebcam(action) {
   modal.classList.add("open");
   btn.disabled = true; btnTxt.textContent = "Chargement...";
   body.innerHTML = '<div class="webcam-preview"><video id="cam-video" autoplay playsinline muted></video></div>';
-  navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:640,height:480}})
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:640,height:480}})
     .then(stream => {
       mediaStream = stream;
       const video = document.getElementById("cam-video");
