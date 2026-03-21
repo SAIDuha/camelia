@@ -3,678 +3,533 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Camélia — Pointage intelligent pour entreprises modernes</title>
-<meta name="description" content="Camélia simplifie le suivi du temps de travail avec badgeage photo, analytics avancés et gestion d'équipe. Essai gratuit.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<title>Camélia — Pointage intelligent pour les entreprises modernes</title>
+<meta name="description" content="Système de pointage avec vérification photo. Badgeage en 1 clic, dashboard temps réel, export Excel/PDF. Essai gratuit 14 jours.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+:root{--bg:#FAFAF8;--bg-alt:#F2F0EC;--cream:#F7F5F2;--card:#FFFFFF;--rose:#B5577A;--rose-dark:#8A3D5A;--rose-light:#F8EEF1;--rose-glow:rgba(181,87,122,.12);--gold:#C8965A;--text:#1A1814;--text-sec:#6B635B;--muted:#9A938C;--border:#E8E3DD;--font-display:'Playfair Display',Georgia,'Times New Roman',serif;--font-body:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#FDFBF9;--bg-alt:#F6F2ED;--card:#fff;--border:#E8E0D8;
-  --text:#1E1B18;--text-secondary:#6B635B;--text-tertiary:#9B948C;
-  --rose:#C4567A;--rose-dark:#A8405F;--rose-light:#F8EEF1;--rose-glow:#C4567A20;
-  --gold:#C8965A;--gold-light:#FBF5ED;
-  --green:#3A8F5C;--green-light:#EDF7F1;
-  --font-display:'Instrument Serif',Georgia,serif;
-  --font-body:'Bricolage Grotesque','Segoe UI',sans-serif;
-}
-html{scroll-behavior:smooth}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);color:var(--text);background:var(--bg);overflow-x:hidden}
+::selection{background:var(--rose-light);color:var(--rose-dark)}
 
-/* ── Animations ── */
+/* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(2deg)}}
-@keyframes pulse-ring{0%{transform:scale(.8);opacity:1}100%{transform:scale(2.2);opacity:0}}
-@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
-@keyframes count{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slide-in-left{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
-@keyframes slide-in-right{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
-@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-10%)}30%{transform:translate(3%,-15%)}50%{transform:translate(-15%,5%)}70%{transform:translate(8%,10%)}90%{transform:translate(-10%,15%)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-.reveal{opacity:0;transform:translateY(40px);transition:all .7s cubic-bezier(.22,1,.36,1)}
+.reveal{opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(.16,1,.3,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
-.reveal-delay-1{transition-delay:.1s}.reveal-delay-2{transition-delay:.2s}.reveal-delay-3{transition-delay:.3s}.reveal-delay-4{transition-delay:.4s}
+.reveal-delay-1{transition-delay:.15s}.reveal-delay-2{transition-delay:.3s}.reveal-delay-3{transition-delay:.45s}.reveal-delay-4{transition-delay:.6s}
 
-/* ── Grain overlay ── */
-body::after{
-  content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  animation:grain 8s steps(10) infinite;opacity:.4;
-}
-
-/* ── Nav ── */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:1000;padding:18px 48px;
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(253,251,249,.85);backdrop-filter:blur(20px) saturate(1.6);
-  border-bottom:1px solid transparent;transition:all .3s;
-}
-nav.scrolled{border-bottom-color:var(--border);box-shadow:0 1px 20px rgba(0,0,0,.04)}
-.nav-logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:24px;color:var(--text);text-decoration:none}
-.nav-logo svg{color:var(--rose)}
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;transition:all .4s;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+.nav-logo span{font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:-.5px}
 .nav-links{display:flex;align-items:center;gap:32px}
-.nav-links a{font-size:14px;font-weight:500;color:var(--text-secondary);text-decoration:none;transition:color .2s;letter-spacing:-.01em}
+.nav-links a{color:var(--text-sec);text-decoration:none;font-size:14px;font-weight:500;transition:color .3s;position:relative}
 .nav-links a:hover{color:var(--rose)}
-.btn-nav{padding:10px 24px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;transition:all .25s;font-family:var(--font-body);border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.btn-outline-nav{color:var(--text);border:1.5px solid var(--border);background:transparent}
-.btn-outline-nav:hover{border-color:var(--rose);color:var(--rose)}
-.btn-primary-nav{background:var(--rose);color:#fff}
-.btn-primary-nav:hover{background:var(--rose-dark);transform:translateY(-1px);box-shadow:0 4px 16px var(--rose-glow)}
-@media(max-width:768px){nav{padding:14px 20px}.nav-links{display:none}}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:var(--rose);transition:width .3s}
+.nav-links a:hover::after{width:100%}
+.btn-nav{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:100px;font-size:13px;font-weight:600;text-decoration:none;transition:all .3s;font-family:var(--font-body)}
+.btn-nav-outline{color:var(--text);border:1.5px solid var(--border)}
+.btn-nav-outline:hover{border-color:var(--rose);color:var(--rose)}
+.btn-nav-primary{background:var(--rose);color:#fff !important;border:1.5px solid var(--rose)}
+.btn-nav-primary:hover{background:var(--rose-dark);border-color:var(--rose-dark);transform:translateY(-1px)}
 
-/* ── Hero ── */
-.hero{
-  min-height:100vh;display:flex;align-items:center;justify-content:center;
-  padding:140px 48px 100px;position:relative;overflow:hidden;
-}
-.hero::before{
-  content:'';position:absolute;top:-20%;right:-10%;width:600px;height:600px;
-  border-radius:50%;background:radial-gradient(circle,var(--rose-light) 0%,transparent 70%);
-  filter:blur(80px);opacity:.6;pointer-events:none;
-}
-.hero::after{
-  content:'';position:absolute;bottom:-10%;left:-5%;width:500px;height:500px;
-  border-radius:50%;background:radial-gradient(circle,var(--gold-light) 0%,transparent 70%);
-  filter:blur(80px);opacity:.5;pointer-events:none;
-}
-.hero-inner{max-width:900px;text-align:center;position:relative;z-index:1}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:100px;
-  background:var(--rose-light);color:var(--rose);font-size:13px;font-weight:600;
-  margin-bottom:28px;letter-spacing:.02em;
-  animation:fadeUp .6s ease both;
-}
-.hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--rose);animation:pulse-ring 2s ease infinite}
-.hero h1{
-  font-family:var(--font-display);font-size:clamp(42px,6vw,76px);font-weight:400;
-  line-height:1.08;letter-spacing:-.03em;margin-bottom:24px;color:var(--text);
-  animation:fadeUp .7s ease both .1s;
-}
-.hero h1 em{font-style:italic;color:var(--rose)}
-.hero p{
-  font-size:clamp(16px,1.8vw,19px);color:var(--text-secondary);max-width:560px;margin:0 auto 40px;
-  line-height:1.65;animation:fadeUp .7s ease both .2s;
-}
-.hero-ctas{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;animation:fadeUp .7s ease both .3s}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:15px 32px;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;transition:all .3s;font-family:var(--font-body);border:none;cursor:pointer;letter-spacing:-.01em}
-.btn-primary{background:var(--rose);color:#fff;box-shadow:0 2px 8px var(--rose-glow)}
-.btn-primary:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 8px 30px var(--rose-glow)}
-.btn-outline{background:transparent;color:var(--text);border:1.5px solid var(--border)}
-.btn-outline:hover{border-color:var(--rose);color:var(--rose)}
-.btn-lg{padding:17px 38px;font-size:16px;border-radius:14px}
-.hero-trust{margin-top:56px;animation:fadeUp .7s ease both .5s}
-.hero-trust p{font-size:12px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:16px}
-.trust-logos{display:flex;align-items:center;justify-content:center;gap:40px;opacity:.35;filter:grayscale(1)}
-.trust-logos span{font-size:18px;font-weight:700;font-family:var(--font-body);letter-spacing:-.02em}
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:120px 40px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-30%;right:-20%;width:700px;height:700px;border-radius:50%;background:var(--rose-glow);filter:blur(100px);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-20%;left:-10%;width:500px;height:500px;border-radius:50%;background:rgba(200,150,90,.06);filter:blur(80px);pointer-events:none}
+.hero-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:60px;position:relative;z-index:1}
+.hero-text{flex:1;text-align:left}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 18px 6px 8px;border-radius:100px;background:var(--rose-light);margin-bottom:32px;animation:fadeUp .8s ease both}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--rose);animation:pulse 2s infinite}
+.hero-badge span{font-size:12px;font-weight:600;color:var(--rose-dark);letter-spacing:.5px}
+.hero h1{font-family:var(--font-display);font-size:clamp(42px,6vw,76px);font-weight:700;line-height:1.05;letter-spacing:-2px;color:var(--text);margin-bottom:24px;animation:fadeUp .8s ease .1s both}
+.hero h1 em{font-style:italic;color:var(--rose);font-weight:700}
+.hero-sub{font-size:clamp(16px,2vw,20px);color:var(--text-sec);line-height:1.65;max-width:500px;margin:0 0 40px;font-weight:400;animation:fadeUp .8s ease .2s both}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;animation:fadeUp .8s ease .3s both}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-body);font-weight:600;border:none;cursor:pointer;transition:all .3s;text-decoration:none}
+.btn-lg{padding:16px 36px;border-radius:100px;font-size:15px}
+.btn-primary{background:var(--rose);color:#fff}
+.btn-primary:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 12px 40px var(--rose-glow)}
+.btn-ghost{color:var(--text-sec);background:none;border:1.5px solid var(--border)}
+.btn-ghost:hover{border-color:var(--rose);color:var(--rose)}
 
-/* ── Social Proof Bar ── */
-.proof-bar{
-  padding:40px 48px;background:var(--bg-alt);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;gap:64px;flex-wrap:wrap;
-}
-.proof-stat{text-align:center}
-.proof-stat .num{font-family:var(--font-display);font-size:40px;color:var(--text);display:block;line-height:1.1}
-.proof-stat .label{font-size:13px;color:var(--text-tertiary);margin-top:4px;font-weight:500}
+/* ── MOCKUP IN HERO ── */
+.hero-mockup{flex:1.2;animation:fadeUp 1s ease .5s both}
+.hero-mockup-inner{position:relative}
+.mockup-browser{background:var(--card);border-radius:16px;box-shadow:0 40px 120px rgba(0,0,0,.08),0 0 0 1px var(--border);overflow:hidden}
+.mockup-topbar{display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--cream)}
+.mockup-dots{display:flex;gap:6px}
+.mockup-dots span{width:10px;height:10px;border-radius:50%;background:var(--border)}
+.mockup-dots span:nth-child(1){background:#FF6058}
+.mockup-dots span:nth-child(2){background:#FFC130}
+.mockup-dots span:nth-child(3){background:#27CA40}
+.mockup-url{flex:1;text-align:center;font-size:11px;color:var(--muted);background:var(--bg-alt);padding:5px 16px;border-radius:6px;margin:0 40px}
+.mockup-screen{padding:24px;background:var(--bg);min-height:320px;display:flex;gap:16px}
+.mockup-sidebar{width:160px;display:flex;flex-direction:column;gap:4px}
+.mockup-sidebar-item{padding:8px 12px;border-radius:8px;font-size:11px;color:var(--muted);font-weight:500}
+.mockup-sidebar-item.active{background:var(--rose-light);color:var(--rose);font-weight:600}
+.mockup-main{flex:1}
+.mockup-stat-row{display:flex;gap:10px;margin-bottom:16px}
+.mockup-stat{flex:1;background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--border)}
+.mockup-stat .val{font-family:var(--font-display);font-size:24px;font-weight:700}
+.mockup-stat .lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.mockup-emp{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;margin-bottom:4px;background:var(--card);border:1px solid var(--border)}
+.mockup-emp-dot{width:7px;height:7px;border-radius:50%}
+.mockup-emp span{font-size:11px;color:var(--text)}
+.mockup-emp .time{margin-left:auto;font-size:10px;color:var(--muted)}
 
-/* ── Features ── */
-.section{padding:100px 48px}
-.section-header{text-align:center;max-width:600px;margin:0 auto 64px}
-.section-label{
-  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
-  color:var(--rose);margin-bottom:14px;display:block;
-}
-.section-title{font-family:var(--font-display);font-size:clamp(32px,4vw,48px);line-height:1.12;letter-spacing:-.02em;margin-bottom:16px}
+/* ── SOCIAL PROOF ── */
+.social-proof{padding:40px 40px;background:var(--cream);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.social-inner{max-width:900px;margin:0 auto;text-align:center}
+.social-proof p{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:16px;letter-spacing:.5px}
+.social-logos{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;align-items:center;opacity:.4}
+.social-logos span{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text)}
+
+/* ── SECTION ── */
+.section{padding:100px 40px}
+.section-header{text-align:center;max-width:640px;margin:0 auto 60px}
+.section-label{font-size:12px;font-weight:600;color:var(--rose);text-transform:uppercase;letter-spacing:3px;margin-bottom:14px}
+.section-title{font-family:var(--font-display);font-size:clamp(32px,4vw,48px);font-weight:700;line-height:1.1;letter-spacing:-1px;color:var(--text)}
 .section-title em{font-style:italic;color:var(--rose)}
-.section-desc{font-size:17px;color:var(--text-secondary);line-height:1.6}
+.section-sub{font-size:17px;color:var(--text-sec);margin-top:16px;line-height:1.65;font-weight:400}
 
-.features-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto;
-}
-.feature-card{
-  padding:36px 30px;border-radius:20px;border:1px solid var(--border);
-  background:var(--card);transition:all .35s;position:relative;overflow:hidden;
-}
-.feature-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.06);border-color:var(--rose)}
-.feature-card::after{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--rose),var(--gold));
-  transform:scaleX(0);transform-origin:left;transition:transform .35s;
-}
-.feature-card:hover::after{transform:scaleX(1)}
-.feature-icon{
-  width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
-  margin-bottom:20px;
-}
-.feature-card h3{font-size:18px;font-weight:700;margin-bottom:10px;letter-spacing:-.02em}
-.feature-card p{font-size:14px;color:var(--text-secondary);line-height:1.6}
-@media(max-width:900px){.features-grid{grid-template-columns:1fr}}
+/* ── FEATURES ── */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 28px;transition:all .4s;position:relative;overflow:hidden}
+.feature-card:hover{transform:translateY(-6px);box-shadow:0 20px 60px var(--rose-glow);border-color:var(--rose-light)}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rose),var(--gold));opacity:0;transition:opacity .4s}
+.feature-card:hover::before{opacity:1}
+.feature-icon{width:48px;height:48px;border-radius:14px;background:var(--rose-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px}
+.feature-card h3{font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.feature-card p{font-size:14px;color:var(--text-sec);line-height:1.6}
 
-/* ── How it works ── */
-.steps{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:0;position:relative}
-.steps::before{content:'';position:absolute;left:28px;top:28px;bottom:28px;width:2px;background:linear-gradient(to bottom,var(--rose),var(--gold));border-radius:1px}
-.step{display:flex;gap:28px;align-items:flex-start;padding:28px 0;position:relative}
-.step-num{
-  width:56px;height:56px;border-radius:50%;background:var(--card);border:2px solid var(--border);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  font-family:var(--font-display);font-size:22px;color:var(--rose);position:relative;z-index:1;
-  transition:all .3s;
-}
-.step:hover .step-num{border-color:var(--rose);background:var(--rose-light)}
-.step-content h3{font-size:20px;font-weight:700;margin-bottom:8px;letter-spacing:-.02em}
-.step-content p{font-size:15px;color:var(--text-secondary);line-height:1.6;max-width:500px}
-@media(max-width:640px){.steps::before{left:20px}.step{gap:20px}.step-num{width:42px;height:42px;font-size:17px}}
+/* ── HOW IT WORKS ── */
+.steps{max-width:800px;margin:0 auto;position:relative}
+.steps::before{content:'';position:absolute;left:24px;top:48px;bottom:48px;width:2px;background:linear-gradient(180deg,var(--rose),var(--gold))}
+.step{display:flex;gap:28px;margin-bottom:48px;position:relative}
+.step-num{width:50px;height:50px;border-radius:50%;background:var(--rose);color:#fff;font-family:var(--font-display);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1}
+.step-content h3{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:6px}
+.step-content p{font-size:15px;color:var(--text-sec);line-height:1.6}
 
-/* ── Pricing ── */
-.pricing-section{background:var(--bg-alt)}
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1080px;margin:0 auto}
-.pricing-card{
-  background:var(--card);border-radius:24px;padding:40px 32px;border:1.5px solid var(--border);
-  position:relative;transition:all .35s;display:flex;flex-direction:column;
-}
-.pricing-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.06)}
-.pricing-card.featured{border-color:var(--rose);box-shadow:0 12px 40px var(--rose-glow)}
-.pricing-card.featured::before{
-  content:'Populaire';position:absolute;top:-13px;left:50%;transform:translateX(-50%);
-  background:var(--rose);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.08em;padding:5px 18px;border-radius:100px;
-}
-.pricing-plan{font-size:14px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-.pricing-price{font-family:var(--font-display);font-size:48px;line-height:1.1;margin-bottom:4px}
-.pricing-price span{font-family:var(--font-body);font-size:16px;font-weight:500;color:var(--text-secondary)}
-.pricing-desc{font-size:14px;color:var(--text-secondary);margin-bottom:28px;line-height:1.5}
-.pricing-divider{height:1px;background:var(--border);margin-bottom:24px}
-.pricing-features{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:32px;flex:1}
-.pricing-features li{font-size:14px;color:var(--text-secondary);display:flex;align-items:flex-start;gap:10px;line-height:1.5}
-.pricing-features li svg{flex-shrink:0;margin-top:2px}
-.pricing-features li.disabled{opacity:.4;text-decoration:line-through}
-.btn-pricing{width:100%;justify-content:center;padding:14px;border-radius:12px}
-.btn-pricing.featured{background:var(--rose);color:#fff}
-.btn-pricing.featured:hover{background:var(--rose-dark)}
-@media(max-width:900px){.pricing-grid{grid-template-columns:1fr;max-width:400px}}
+/* ── PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto}
+.pricing-card{background:var(--card);border:1.5px solid var(--border);border-radius:24px;padding:36px 28px;position:relative;transition:all .4s}
+.pricing-card.featured{border-color:var(--rose);box-shadow:0 20px 60px var(--rose-glow)}
+.pricing-card.featured .pricing-badge{display:block}
+.pricing-badge{display:none;position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--rose);color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:100px;letter-spacing:1px;text-transform:uppercase}
+.pricing-plan{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.pricing-price{font-family:var(--font-display);font-size:44px;font-weight:700;margin:8px 0 4px;color:var(--text)}
+.pricing-price span{font-size:16px;font-weight:400;color:var(--muted)}
+.pricing-desc{font-size:13px;color:var(--text-sec);margin-bottom:20px;line-height:1.5}
+.pricing-divider{height:1px;background:var(--border);margin:0 0 20px}
+.pricing-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px;min-height:200px}
+.pricing-features li{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-sec)}
+.pricing-features li .check{color:var(--rose);font-weight:700;font-size:15px}
+.pricing-features li .cross{color:var(--border);font-size:13px}
+.pricing-features li.disabled{color:var(--muted)}
+.btn-pricing{width:100%;justify-content:center;padding:14px;border-radius:100px;font-size:14px}
+.btn-pricing.featured{background:var(--rose);color:#fff;border:none}
+.btn-pricing.featured:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 8px 30px var(--rose-glow)}
+.btn-pricing.outline{background:none;color:var(--text);border:1.5px solid var(--border)}
+.btn-pricing.outline:hover{border-color:var(--rose);color:var(--rose)}
 
-/* ── Testimonials ── */
-.testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1080px;margin:0 auto}
-.testimonial{
-  background:var(--card);border-radius:20px;padding:32px;border:1px solid var(--border);
-  transition:all .3s;
-}
-.testimonial:hover{border-color:var(--rose);transform:translateY(-2px)}
-.testimonial-stars{color:var(--gold);font-size:14px;margin-bottom:16px;letter-spacing:2px}
-.testimonial p{font-size:15px;color:var(--text-secondary);line-height:1.65;margin-bottom:20px;font-style:italic}
-.testimonial-author{display:flex;align-items:center;gap:12px}
-.testimonial-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
-.testimonial-name{font-size:14px;font-weight:600}
-.testimonial-role{font-size:12px;color:var(--text-tertiary)}
-@media(max-width:900px){.testimonials-grid{grid-template-columns:1fr}}
+/* ── TESTIMONIALS ── */
+.testimonials{display:flex;gap:20px;max-width:1000px;margin:0 auto}
+.testimonial{flex:1;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px}
+.testimonial-stars{color:var(--gold);font-size:14px;letter-spacing:2px;margin-bottom:12px}
+.testimonial p{font-size:14px;color:var(--text-sec);line-height:1.65;font-style:italic;margin-bottom:16px}
+.testimonial-author{display:flex;align-items:center;gap:10px}
+.testimonial-avatar{width:36px;height:36px;border-radius:50%;background:var(--rose-light);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--rose)}
+.testimonial-name{font-size:13px;font-weight:600;color:var(--text)}
+.testimonial-role{font-size:11px;color:var(--muted)}
 
 /* ── FAQ ── */
-.faq-list{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-.faq-item{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color .3s}
-.faq-item:hover{border-color:var(--rose)}
-.faq-q{
-  width:100%;padding:20px 24px;background:none;border:none;text-align:left;cursor:pointer;
-  font-size:16px;font-weight:600;font-family:var(--font-body);color:var(--text);
-  display:flex;align-items:center;justify-content:space-between;gap:12px;letter-spacing:-.01em;
-}
-.faq-q svg{flex-shrink:0;transition:transform .3s;color:var(--text-tertiary)}
-.faq-item.open .faq-q svg{transform:rotate(45deg);color:var(--rose)}
-.faq-a{padding:0 24px;max-height:0;overflow:hidden;transition:all .35s ease}
-.faq-item.open .faq-a{max-height:200px;padding:0 24px 20px}
-.faq-a p{font-size:14px;color:var(--text-secondary);line-height:1.65}
+.faq-list{max-width:700px;margin:0 auto}
+.faq-item{border-bottom:1px solid var(--border);padding:20px 0}
+.faq-q{display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:16px;font-weight:600;color:var(--text);font-family:var(--font-body)}
+.faq-q:hover{color:var(--rose)}
+.faq-arrow{transition:transform .3s;font-size:18px;color:var(--muted)}
+.faq-item.open .faq-arrow{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease}
+.faq-item.open .faq-a{max-height:200px;padding-top:12px}
+.faq-a p{font-size:14px;color:var(--text-sec);line-height:1.65}
 
 /* ── CTA ── */
-.cta-section{
-  padding:100px 48px;text-align:center;position:relative;overflow:hidden;
-  background:linear-gradient(135deg,#1E1B18 0%,#2C2420 50%,#3A2830 100%);color:#fff;
-}
-.cta-section::before{
-  content:'';position:absolute;top:50%;left:50%;width:800px;height:800px;
-  transform:translate(-50%,-50%);border-radius:50%;
-  background:radial-gradient(circle,var(--rose-glow) 0%,transparent 60%);
-  filter:blur(60px);opacity:.5;
-}
-.cta-section h2{font-family:var(--font-display);font-size:clamp(32px,4vw,52px);line-height:1.12;margin-bottom:16px;position:relative}
+.cta-section{background:var(--text);padding:80px 40px;text-align:center;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:600px;border-radius:50%;background:rgba(181,87,122,.1);filter:blur(100px)}
+.cta-section h2{font-family:var(--font-display);font-size:clamp(28px,4vw,42px);font-weight:700;color:var(--bg);margin-bottom:14px;position:relative}
 .cta-section h2 em{font-style:italic;color:var(--rose)}
-.cta-section p{font-size:17px;color:rgba(255,255,255,.6);margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;position:relative}
-.cta-section .btn{position:relative}
+.cta-section p{font-size:16px;color:rgba(250,250,248,.5);margin-bottom:32px;position:relative}
+.btn-cta{background:var(--rose);color:#fff;border:none;padding:18px 44px;border-radius:100px;font-size:16px;font-weight:600;position:relative}
+.btn-cta:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 12px 40px rgba(181,87,122,.3)}
 
-/* ── Footer ── */
-footer{padding:48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}
-footer .logo{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:20px;color:var(--text)}
-footer .logo svg{color:var(--rose)}
-footer .links{display:flex;gap:28px}
-footer .links a{font-size:13px;color:var(--text-tertiary);text-decoration:none;transition:color .2s}
-footer .links a:hover{color:var(--rose)}
-footer .copy{font-size:12px;color:var(--text-tertiary)}
-@media(max-width:640px){footer{flex-direction:column;text-align:center}footer .links{flex-wrap:wrap;justify-content:center}}
+/* ── FOOTER ── */
+footer{padding:48px 40px 32px;border-top:1px solid var(--border)}
+.footer-inner{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.footer-logo{display:flex;align-items:center;gap:8px}
+.footer-logo span{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .3s}
+.footer-links a:hover{color:var(--rose)}
+.footer-copy{font-size:12px;color:var(--muted);margin-top:20px;text-align:center}
 
-/* ── Responsive ── */
+/* ── CONTACT MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(26,24,20,.5);backdrop-filter:blur(12px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border-radius:24px;padding:40px;max-width:480px;width:92%;box-shadow:0 40px 120px rgba(0,0,0,.15);position:relative;animation:scaleIn .3s ease}
+.modal-close{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:var(--bg-alt);color:var(--text)}
+.modal h3{font-family:var(--font-display);font-size:24px;margin-bottom:6px}
+.modal p{color:var(--text-sec);font-size:14px;margin-bottom:24px;line-height:1.5}
+.modal label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.modal input,.modal select,.modal textarea{width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:14px;font-family:var(--font-body);color:var(--text);outline:none;margin-bottom:14px;transition:border-color .2s}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--rose)}
+.modal textarea{resize:vertical;min-height:80px}
+.modal .btn-submit{width:100%;padding:14px;border:none;border-radius:100px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all .3s}
+.modal .btn-submit:hover{background:var(--rose-dark)}
+.modal .error-msg{color:#D94848;font-size:13px;margin-bottom:10px;display:none}
+
+/* ── RESPONSIVE ── */
 @media(max-width:768px){
-  .hero{padding:120px 24px 80px}.section{padding:72px 24px}
-  .proof-bar{gap:32px;padding:32px 24px}.pricing-section,.cta-section{padding:72px 24px}
+  nav{padding:14px 20px}
+  .nav-links a:not(.btn-nav){display:none}
+  .hero{padding:100px 24px 60px}
+  .hero-inner{flex-direction:column;gap:40px}
+  .hero-text{text-align:center}
+  .hero-sub{margin:0 auto 40px}
+  .hero-ctas{justify-content:center}
+  .section{padding:60px 24px}
+  .features-grid,.pricing-grid{grid-template-columns:1fr}
+  .mockup-screen{flex-direction:column}
+  .mockup-sidebar{width:100%}
+  .steps::before{display:none}
+  .footer-inner{flex-direction:column;text-align:center}
 }
 </style>
 </head>
 <body>
 
-<!-- ══════════ NAV ══════════ -->
-<nav id="navbar">
-  <a href="#" class="nav-logo">
-    <svg width="28" height="28" viewBox="0 0 120 120" fill="none" stroke-linecap="round"><circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="60" y2="26" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="82" y2="44" stroke="#B5577A" stroke-width="2.5"/><circle cx="60" cy="60" r="4" fill="#B5577A"/></svg>
-    Camélia
+<!-- ══════ NAV ══════ -->
+<nav id="nav">
+  <a href="/" class="nav-logo">
+    <svg width="26" height="26" viewBox="0 0 120 120" fill="none" stroke-linecap="round"><circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="60" y2="26" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="82" y2="44" stroke="#B5577A" stroke-width="2.5"/><circle cx="60" cy="60" r="4" fill="#B5577A"/></svg>
+    <span>Camélia</span>
   </a>
   <div class="nav-links">
     <a href="#features">Fonctionnalités</a>
     <a href="#pricing">Tarifs</a>
     <a href="#faq">FAQ</a>
-    <a href="/app" class="btn-nav btn-outline-nav">Connexion</a>
-    <a href="/app" class="btn-nav btn-primary-nav">Essai gratuit</a>
+    <a href="/app" class="btn-nav btn-nav-outline">Connexion</a>
+    <a href="/app" class="btn-nav btn-nav-primary">Essai gratuit</a>
   </div>
 </nav>
 
-<!-- ══════════ HERO ══════════ -->
+<!-- ══════ HERO ══════ -->
 <section class="hero">
   <div class="hero-inner">
-    <div class="hero-badge">Nouveau — Capture photo intégrée</div>
-    <h1>Le pointage qui <em>simplifie</em> la gestion de vos équipes</h1>
-    <p>Badgeage en un clic avec vérification photo, suivi des heures en temps réel, et analytics complets. Fini les feuilles Excel et les oublis.</p>
-    <div class="hero-ctas">
-      <a href="#pricing" class="btn btn-primary btn-lg">
-        Démarrer gratuitement
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
-      <a href="#how" class="btn btn-outline btn-lg">Comment ça marche</a>
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        <span>14 jours d'essai gratuit</span>
+      </div>
+      <h1>Le pointage qui fait<br><em>la différence</em></h1>
+      <p class="hero-sub">Vos employés badgent en un clic avec photo de preuve. Vous suivez tout en temps réel. Simple, élégant, efficace.</p>
+      <div class="hero-ctas">
+        <a href="/app" class="btn btn-primary btn-lg">
+          Commencer gratuitement
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#how" class="btn btn-ghost btn-lg">Découvrir</a>
+      </div>
     </div>
-    <div class="hero-trust">
-      <p>Ils nous font confiance</p>
-      <div class="trust-logos">
-        <span>NEXSUR</span><span>NETEXIAL</span><span>TechVault</span><span>ArchiGroup</span>
+
+    <!-- Browser mockup -->
+    <div class="hero-mockup">
+      <div class="hero-mockup-inner">
+        <div class="mockup-browser">
+          <div class="mockup-topbar">
+            <div class="mockup-dots"><span></span><span></span><span></span></div>
+            <div class="mockup-url">camelia-02uo.onrender.com/app</div>
+            <div style="width:60px"></div>
+          </div>
+          <div class="mockup-screen">
+            <div class="mockup-sidebar">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;padding:0 12px">
+                <svg width="16" height="16" viewBox="0 0 120 120" fill="none" stroke-linecap="round"><circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="4"/><line x1="60" y1="60" x2="60" y2="30" stroke="#B5577A" stroke-width="4"/><line x1="60" y1="60" x2="80" y2="46" stroke="#B5577A" stroke-width="3"/><circle cx="60" cy="60" r="5" fill="#B5577A"/></svg>
+                <span style="font-family:var(--font-display);font-size:13px;font-weight:700">Camélia</span>
+              </div>
+              <div class="mockup-sidebar-item active">Tableau de bord</div>
+              <div class="mockup-sidebar-item">Employés</div>
+              <div class="mockup-sidebar-item">Abonnement</div>
+            </div>
+            <div class="mockup-main">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px">Bonjour, Marie</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:14px;font-family:var(--font-display)">Tableau de bord</div>
+              <div class="mockup-stat-row">
+                <div class="mockup-stat"><div class="val" style="color:#3AAB6D">12</div><div class="lbl">Présents</div></div>
+                <div class="mockup-stat"><div class="val" style="color:#E8B44D">3</div><div class="lbl">En pause</div></div>
+                <div class="mockup-stat"><div class="val" style="color:#D94848">2</div><div class="lbl">Absents</div></div>
+              </div>
+              <div class="mockup-emp"><div class="mockup-emp-dot" style="background:#3AAB6D"></div><span>Marie Dupont</span><span class="time">8h02</span></div>
+              <div class="mockup-emp"><div class="mockup-emp-dot" style="background:#3AAB6D"></div><span>Karim Rahimi</span><span class="time">7h45</span></div>
+              <div class="mockup-emp"><div class="mockup-emp-dot" style="background:#E8B44D"></div><span>Julie Perrin</span><span class="time">Pause</span></div>
+              <div class="mockup-emp"><div class="mockup-emp-dot" style="background:#D94848"></div><span>Lucas Martin</span><span class="time">Absent</span></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════ SOCIAL PROOF BAR ══════════ -->
-<div class="proof-bar">
-  <div class="proof-stat reveal"><span class="num" data-target="2400">0</span><span class="label">Badges par jour</span></div>
-  <div class="proof-stat reveal reveal-delay-1"><span class="num" data-target="180">0</span><span class="label">Entreprises actives</span></div>
-  <div class="proof-stat reveal reveal-delay-2"><span class="num" data-target="99">0</span><span class="label">% de disponibilité</span></div>
-  <div class="proof-stat reveal reveal-delay-3"><span class="num" data-target="12">0</span><span class="label">Secondes pour badger</span></div>
+<!-- ══════ SOCIAL PROOF ══════ -->
+<div class="social-proof">
+  <div class="social-inner">
+    <p style="font-family:var(--font-display);font-size:clamp(18px,2.5vw,24px);color:var(--text-sec);font-style:italic;font-weight:400;max-width:600px;margin:0 auto;line-height:1.5;opacity:.7">
+      « Mieux vaut pointer en retard que ne jamais pointer du tout. »
+    </p>
+  </div>
 </div>
 
-<!-- ══════════ FEATURES ══════════ -->
+<!-- ══════ FEATURES ══════ -->
 <section class="section" id="features">
   <div class="section-header reveal">
-    <span class="section-label">Fonctionnalités</span>
-    <h2 class="section-title">Tout ce qu'il faut, <em>rien de superflu</em></h2>
-    <p class="section-desc">Camélia remplace les pointeuses coûteuses et les feuilles de temps oubliées par une solution moderne et intuitive.</p>
+    <div class="section-label">Fonctionnalités</div>
+    <h2 class="section-title">Tout ce qu'il faut.<br><em>Rien de plus.</em></h2>
+    <p class="section-sub">Chaque fonctionnalité a été pensée pour simplifier votre quotidien.</p>
   </div>
   <div class="features-grid">
-    <div class="feature-card reveal">
-      <div class="feature-icon" style="background:var(--rose-light)">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      </div>
-      <h3>Badgeage photo</h3>
-      <p>Capture webcam à chaque badge pour vérifier l'identité. Compte à rebours 3-2-1, flash, stockage sécurisé. Impossible de tricher.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-1">
-      <div class="feature-icon" style="background:var(--gold-light)">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      </div>
-      <h3>Suivi temps réel</h3>
-      <p>Arrivée, pause, départ — tout est tracé automatiquement. Vos salariés voient leurs heures, vous voyez qui est présent.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-2">
-      <div class="feature-icon" style="background:var(--green-light)">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-      </div>
-      <h3>Analytics avancés</h3>
-      <p>Heures par jour, semaine, mois. Moyennes, tendances, retards. Exportez en Excel ou PDF en un clic pour la comptabilité.</p>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon" style="background:var(--rose-light)">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <h3>Gestion d'équipe</h3>
-      <p>Créez des profils en 30 secondes. Départements, postes, rôles admin ou salarié. Activez/désactivez sans supprimer.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-1">
-      <div class="feature-icon" style="background:var(--gold-light)">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-      </div>
-      <h3>Sécurisé</h3>
-      <p>Authentification par code + PIN, mots de passe hashés, sessions sécurisées. Vos données restent les vôtres.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-2">
-      <div class="feature-icon" style="background:var(--green-light)">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8M12 17v4"/></svg>
-      </div>
-      <h3>100% web</h3>
-      <p>Aucune installation, aucun matériel. Un navigateur suffit. Fonctionne sur PC, tablette, smartphone. Déployé en 5 minutes.</p>
-    </div>
+    <div class="feature-card reveal"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5577A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div><h3>Preuve photo</h3><p>Chaque badge est accompagné d'une photo automatique. Fini les fraudes.</p></div>
+    <div class="feature-card reveal reveal-delay-1"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5577A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div><h3>Dashboard temps réel</h3><p>Voyez qui est présent, en pause ou absent en un coup d'œil.</p></div>
+    <div class="feature-card reveal reveal-delay-2"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5577A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div><h3>Invitation par lien</h3><p>Envoyez un lien par WhatsApp. L'employé crée son compte en 30 secondes.</p></div>
+    <div class="feature-card reveal reveal-delay-3"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5577A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div><h3>Export Excel & PDF</h3><p>Générez les rapports de pointage en un clic pour votre comptable.</p></div>
+    <div class="feature-card reveal reveal-delay-4"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5577A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg></div><h3>Multi-entreprise</h3><p>Chaque client a son espace isolé et sécurisé. Données séparées.</p></div>
+    <div class="feature-card reveal"><div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5577A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><h3>Sécurité</h3><p>Mots de passe chiffrés, sessions sécurisées, conforme RGPD.</p></div>
   </div>
 </section>
 
-<!-- ══════════ HOW IT WORKS ══════════ -->
-<section class="section" id="how" style="background:var(--bg-alt)">
+<!-- ══════ HOW IT WORKS ══════ -->
+<section class="section" id="how" style="background:var(--cream)">
   <div class="section-header reveal">
-    <span class="section-label">Comment ça marche</span>
-    <h2 class="section-title">Opérationnel en <em>3 étapes</em></h2>
+    <div class="section-label">Comment ça marche</div>
+    <h2 class="section-title">Prêt en <em>2 minutes</em></h2>
   </div>
   <div class="steps">
     <div class="step reveal">
       <div class="step-num">1</div>
-      <div class="step-content">
-        <h3>Créez votre espace</h3>
-        <p>Inscrivez-vous, nommez votre entreprise, et créez les profils de vos salariés en quelques clics. Chacun reçoit un code et un PIN.</p>
-      </div>
+      <div class="step-content"><h3>Créez votre compte</h3><p>Nom, email, mot de passe. Votre espace est prêt immédiatement.</p></div>
     </div>
     <div class="step reveal reveal-delay-1">
       <div class="step-num">2</div>
-      <div class="step-content">
-        <h3>Vos employés badgent</h3>
-        <p>Arrivée → Pause → Reprise → Départ. Un clic + une photo. C'est tout. Pas de formation nécessaire.</p>
-      </div>
+      <div class="step-content"><h3>Invitez vos employés</h3><p>Générez un lien d'invitation et partagez-le. Ils s'inscrivent eux-mêmes.</p></div>
     </div>
     <div class="step reveal reveal-delay-2">
       <div class="step-num">3</div>
-      <div class="step-content">
-        <h3>Vous suivez tout</h3>
-        <p>Dashboard en temps réel, statistiques par employé, historique complet, exports. Vous avez le contrôle total.</p>
-      </div>
+      <div class="step-content"><h3>C'est parti</h3><p>Vos employés badgent avec photo. Vous suivez tout depuis votre dashboard.</p></div>
     </div>
   </div>
 </section>
 
-<!-- ══════════ PRICING ══════════ -->
-<section class="section pricing-section" id="pricing">
+<!-- ══════ PRICING ══════ -->
+<section class="section" id="pricing">
   <div class="section-header reveal">
-    <span class="section-label">Tarifs</span>
-    <h2 class="section-title">Un plan pour <em>chaque entreprise</em></h2>
-    <p class="section-desc">Commencez gratuitement, évoluez quand vous grandissez. Sans engagement.</p>
+    <div class="section-label">Tarifs</div>
+    <h2 class="section-title">Un plan pour chaque <em>entreprise</em></h2>
+    <p class="section-sub">14 jours d'essai gratuit. Sans engagement. Sans carte bancaire.</p>
   </div>
   <div class="pricing-grid">
-    <!-- STARTER -->
+    <!-- Starter -->
     <div class="pricing-card reveal">
       <div class="pricing-plan">Starter</div>
       <div class="pricing-price">19€<span>/mois</span></div>
-      <p class="pricing-desc">Pour les petites équipes qui veulent structurer leur pointage.</p>
+      <div class="pricing-desc">Pour les petites équipes qui veulent structurer leur pointage.</div>
       <div class="pricing-divider"></div>
       <ul class="pricing-features">
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Jusqu'à <strong>10 employés</strong></li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Badgeage photo</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Historique 30 jours</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>1 administrateur</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Support email</li>
-        <li class="disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>Export Excel/PDF</li>
-        <li class="disabled"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>Analytics avancés</li>
+        <li><span class="check">✓</span> Jusqu'à 10 employés</li>
+        <li><span class="check">✓</span> Badgeage photo</li>
+        <li><span class="check">✓</span> Historique 30 jours</li>
+        <li><span class="check">✓</span> 1 administrateur</li>
+        <li><span class="check">✓</span> Support email</li>
+        <li class="disabled"><span class="cross">✕</span> Export Excel/PDF</li>
+        <li class="disabled"><span class="cross">✕</span> Analytics avancés</li>
       </ul>
-      <a href="/app" class="btn btn-outline btn-pricing">Commencer gratuitement</a>
+      <a href="/app" class="btn btn-pricing outline">Commencer</a>
     </div>
-
-    <!-- PRO -->
+    <!-- Pro -->
     <div class="pricing-card featured reveal reveal-delay-1">
+      <div class="pricing-badge">Populaire</div>
       <div class="pricing-plan">Pro</div>
       <div class="pricing-price">49€<span>/mois</span></div>
-      <p class="pricing-desc">Pour les entreprises en croissance qui veulent des insights complets.</p>
+      <div class="pricing-desc">Pour les entreprises en croissance qui veulent des insights complets.</div>
       <div class="pricing-divider"></div>
       <ul class="pricing-features">
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Jusqu'à <strong>100 employés</strong></li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Badgeage photo</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Historique illimité</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>5 administrateurs</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><strong>Export Excel & PDF</strong></li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><strong>Analytics avancés</strong></li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Support prioritaire</li>
+        <li><span class="check">✓</span> Jusqu'à 100 employés</li>
+        <li><span class="check">✓</span> Badgeage photo</li>
+        <li><span class="check">✓</span> Historique illimité</li>
+        <li><span class="check">✓</span> 5 administrateurs</li>
+        <li><span class="check">✓</span> <strong>Export Excel & PDF</strong></li>
+        <li><span class="check">✓</span> <strong>Analytics avancés</strong></li>
+        <li><span class="check">✓</span> Support prioritaire</li>
       </ul>
-      <a href="/app" class="btn btn-primary btn-pricing featured">Essai gratuit 14 jours</a>
+      <a href="/app" class="btn btn-pricing featured">Essai gratuit 14 jours</a>
     </div>
-
-    <!-- ENTERPRISE -->
+    <!-- Enterprise -->
     <div class="pricing-card reveal reveal-delay-2">
       <div class="pricing-plan">Enterprise</div>
       <div class="pricing-price">Sur mesure</div>
-      <p class="pricing-desc">Pour les grandes structures avec des besoins spécifiques.</p>
+      <div class="pricing-desc">Pour les grandes structures avec des besoins spécifiques.</div>
       <div class="pricing-divider"></div>
       <ul class="pricing-features">
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><strong>Employés illimités</strong></li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Tout le plan Pro</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Multi-sites</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>API & intégrations</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>SSO / LDAP</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Account manager dédié</li>
-        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>SLA 99.9%</li>
+        <li><span class="check">✓</span> Employés illimités</li>
+        <li><span class="check">✓</span> Tout le plan Pro</li>
+        <li><span class="check">✓</span> Multi-sites</li>
+        <li><span class="check">✓</span> API & intégrations</li>
+        <li><span class="check">✓</span> SSO / LDAP</li>
+        <li><span class="check">✓</span> Account manager dédié</li>
+        <li><span class="check">✓</span> SLA 99.9%</li>
       </ul>
-      <a href="#" onclick="openContact();return false" class="btn btn-outline btn-pricing">Nous contacter</a>
+      <a href="#" onclick="openContact();return false" class="btn btn-pricing outline">Nous contacter</a>
     </div>
   </div>
 </section>
 
-<!-- ══════════ TESTIMONIALS ══════════ -->
-<section class="section">
+<!-- ══════ AVANT / APRÈS ══════ -->
+<section class="section" style="background:var(--cream)">
   <div class="section-header reveal">
-    <span class="section-label">Témoignages</span>
-    <h2 class="section-title">Ce qu'en disent <em>nos clients</em></h2>
+    <div class="section-label">Comparaison</div>
+    <h2 class="section-title">Avant vs <em>Après</em></h2>
   </div>
-  <div class="testimonials-grid">
-    <div class="testimonial reveal">
-      <div class="testimonial-stars">★★★★★</div>
-      <p>"On est passé de feuilles de temps papier à Camélia en une journée. Mes employés adorent la simplicité du badgeage photo."</p>
-      <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background:var(--rose)">PL</div>
-        <div><div class="testimonial-name">Philippe Laurent</div><div class="testimonial-role">Directeur — Boulangerie Laurent & Fils</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px;margin:0 auto">
+    <div class="reveal" style="background:var(--card);border-radius:20px;padding:32px;border:1.5px solid var(--border)">
+      <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:20px">Sans Camélia</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:#D94848;font-size:16px;font-weight:700">✕</span><span style="font-size:14px;color:var(--text-sec)">Feuilles de pointage papier</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:#D94848;font-size:16px;font-weight:700">✕</span><span style="font-size:14px;color:var(--text-sec)">Oublis et retards non tracés</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:#D94848;font-size:16px;font-weight:700">✕</span><span style="font-size:14px;color:var(--text-sec)">Excel à remplir chaque semaine</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:#D94848;font-size:16px;font-weight:700">✕</span><span style="font-size:14px;color:var(--text-sec)">Aucune preuve en cas de litige</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:#D94848;font-size:16px;font-weight:700">✕</span><span style="font-size:14px;color:var(--text-sec)">150€+/mois pour un logiciel complexe</span></div>
       </div>
     </div>
-    <div class="testimonial reveal reveal-delay-1">
-      <div class="testimonial-stars">★★★★★</div>
-      <p>"Le dashboard admin me donne une vue instantanée de qui est là. Les exports PDF m'ont fait gagner 3h par mois en comptabilité."</p>
-      <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background:var(--gold)">SM</div>
-        <div><div class="testimonial-name">Sophie Martin</div><div class="testimonial-role">DRH — Groupe ArchiTech</div></div>
-      </div>
-    </div>
-    <div class="testimonial reveal reveal-delay-2">
-      <div class="testimonial-stars">★★★★★</div>
-      <p>"La preuve photo à chaque badge a réglé nos problèmes de pointage fantôme. Et l'interface est vraiment belle, ce qui ne gâche rien."</p>
-      <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background:var(--green)">KR</div>
-        <div><div class="testimonial-name">Karim Rahmani</div><div class="testimonial-role">Gérant — Express Logistique</div></div>
+    <div class="reveal reveal-delay-1" style="background:var(--card);border-radius:20px;padding:32px;border:2px solid var(--rose);box-shadow:0 12px 40px var(--rose-glow)">
+      <div style="font-size:13px;font-weight:600;color:var(--rose);text-transform:uppercase;letter-spacing:2px;margin-bottom:20px">Avec Camélia</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--rose);font-size:16px;font-weight:700">✓</span><span style="font-size:14px;color:var(--text)">Badgeage en 1 clic avec photo</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--rose);font-size:16px;font-weight:700">✓</span><span style="font-size:14px;color:var(--text)">Suivi temps réel de toute l'équipe</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--rose);font-size:16px;font-weight:700">✓</span><span style="font-size:14px;color:var(--text)">Export automatique Excel & PDF</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--rose);font-size:16px;font-weight:700">✓</span><span style="font-size:14px;color:var(--text)">Photo de preuve à chaque badge</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--rose);font-size:16px;font-weight:700">✓</span><span style="font-size:14px;color:var(--text);font-weight:600">À partir de 19€/mois</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════ FAQ ══════════ -->
-<section class="section" id="faq" style="background:var(--bg-alt)">
+<!-- ══════ FAQ ══════ -->
+<section class="section" id="faq">
   <div class="section-header reveal">
-    <span class="section-label">FAQ</span>
+    <div class="section-label">FAQ</div>
     <h2 class="section-title">Questions <em>fréquentes</em></h2>
   </div>
   <div class="faq-list">
-    <div class="faq-item reveal">
-      <button class="faq-q" onclick="toggleFaq(this)">Faut-il installer un logiciel ?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
-      <div class="faq-a"><p>Non. Camélia est 100% web. Vos employés y accèdent depuis n'importe quel navigateur — PC, tablette ou smartphone. Aucun matériel ni installation nécessaire.</p></div>
-    </div>
-    <div class="faq-item reveal reveal-delay-1">
-      <button class="faq-q" onclick="toggleFaq(this)">Comment fonctionne la capture photo ?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
-      <div class="faq-a"><p>À chaque badge, la webcam de l'ordinateur se déclenche avec un compte à rebours. La photo est prise sur place et stockée de façon sécurisée. Impossible de la télécharger à l'avance.</p></div>
-    </div>
-    <div class="faq-item reveal reveal-delay-2">
-      <button class="faq-q" onclick="toggleFaq(this)">Puis-je changer de plan à tout moment ?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
-      <div class="faq-a"><p>Oui. Vous pouvez upgrader ou downgrader votre plan à tout moment. Le changement est appliqué immédiatement et facturé au prorata.</p></div>
-    </div>
-    <div class="faq-item reveal">
-      <button class="faq-q" onclick="toggleFaq(this)">Mes données sont-elles sécurisées ?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
-      <div class="faq-a"><p>Absolument. Connexions HTTPS, mots de passe hashés, données hébergées en Europe. Nous ne revendons jamais vos données et sommes conformes au RGPD.</p></div>
-    </div>
-    <div class="faq-item reveal reveal-delay-1">
-      <button class="faq-q" onclick="toggleFaq(this)">Proposez-vous un essai gratuit ?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
-      <div class="faq-a"><p>Oui, le plan Pro est disponible en essai gratuit pendant 14 jours. Aucune carte bancaire requise pour commencer.</p></div>
-    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">L'essai gratuit engage-t-il à quelque chose ?<span class="faq-arrow">▾</span></div><div class="faq-a"><p>Non. 14 jours gratuits, sans carte bancaire, sans engagement. Si vous ne passez pas à un plan payant, le compte est simplement désactivé.</p></div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Comment mes employés accèdent à l'app ?<span class="faq-arrow">▾</span></div><div class="faq-a"><p>Vous générez un lien d'invitation depuis votre dashboard. L'employé clique, crée son compte en 30 secondes et peut immédiatement badger.</p></div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Faut-il installer une application ?<span class="faq-arrow">▾</span></div><div class="faq-a"><p>Non. Camélia est 100% web, accessible depuis n'importe quel navigateur sur téléphone, tablette ou ordinateur.</p></div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Les données sont-elles sécurisées ?<span class="faq-arrow">▾</span></div><div class="faq-a"><p>Oui. Connexions HTTPS, mots de passe chiffrés, données hébergées en Europe, conforme RGPD.</p></div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Puis-je changer de plan à tout moment ?<span class="faq-arrow">▾</span></div><div class="faq-a"><p>Oui, vous pouvez upgrader ou downgrader à tout moment. Contactez-nous et le changement est effectif sous 24h.</p></div></div>
   </div>
 </section>
 
-<!-- ══════════ CTA ══════════ -->
+<!-- ══════ CTA ══════ -->
 <section class="cta-section">
-  <h2 class="reveal">Prêt à moderniser <em>votre pointage</em> ?</h2>
-  <p class="reveal reveal-delay-1">Rejoignez les 180+ entreprises qui ont déjà choisi Camélia. Essai gratuit, sans engagement.</p>
+  <h2 class="reveal">Prêt à moderniser votre <em>pointage</em> ?</h2>
+  <p class="reveal reveal-delay-1">14 jours gratuits. Sans engagement. Sans carte bancaire.</p>
   <div class="reveal reveal-delay-2">
-    <a href="/app" class="btn btn-primary btn-lg" style="background:#fff;color:var(--rose)">
-      Démarrer l'essai gratuit
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    <a href="/app" class="btn btn-cta">
+      Commencer maintenant
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
   </div>
 </section>
 
-<!-- ══════════ FOOTER ══════════ -->
+<!-- ══════ FOOTER ══════ -->
 <footer>
-  <div class="logo">
-    <svg width="28" height="28" viewBox="0 0 120 120" fill="none" stroke-linecap="round"><circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="60" y2="26" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="82" y2="44" stroke="#B5577A" stroke-width="2.5"/><circle cx="60" cy="60" r="4" fill="#B5577A"/></svg>
-    Camélia
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <svg width="20" height="20" viewBox="0 0 120 120" fill="none" stroke-linecap="round"><circle cx="60" cy="60" r="48" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="60" y2="26" stroke="#B5577A" stroke-width="3"/><line x1="60" y1="60" x2="82" y2="44" stroke="#B5577A" stroke-width="2.5"/><circle cx="60" cy="60" r="4" fill="#B5577A"/></svg>
+      <span>Camélia</span>
+    </div>
+    <div class="footer-links">
+      <a href="#features">Fonctionnalités</a>
+      <a href="#pricing">Tarifs</a>
+      <a href="#faq">FAQ</a>
+      <a href="/app">Connexion</a>
+    </div>
   </div>
-  <div class="links">
-    <a href="#features">Fonctionnalités</a>
-    <a href="#pricing">Tarifs</a>
-    <a href="#faq">FAQ</a>
-    <a href="#">Mentions légales</a>
-    <a href="#">Confidentialité</a>
-    <a href="#">Contact</a>
-  </div>
-  <div class="copy">© 2026 Camélia. Tous droits réservés.</div>
+  <div class="footer-copy">© 2026 Camélia. Tous droits réservés.</div>
 </footer>
 
-<script>
-// ── Nav scroll ──
-window.addEventListener('scroll', () => {
-  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
-});
-
-// ── Reveal on scroll ──
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); }});
-}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-// ── Counter animation ──
-const counterObserver = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (!e.isIntersecting) return;
-    const el = e.target.querySelector('.num');
-    const target = parseInt(el.dataset.target);
-    const duration = 1800;
-    const start = performance.now();
-    const tick = (now) => {
-      const p = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(target * eased).toLocaleString('fr-FR');
-      if (p < 1) requestAnimationFrame(tick);
-      else el.textContent = target === 99 ? '99.9' : target.toLocaleString('fr-FR');
-    };
-    requestAnimationFrame(tick);
-    counterObserver.unobserve(e.target);
-  });
-}, { threshold: 0.5 });
-document.querySelectorAll('.proof-stat').forEach(el => counterObserver.observe(el));
-
-// ── FAQ toggle ──
-function toggleFaq(btn) {
-  const item = btn.parentElement;
-  const wasOpen = item.classList.contains('open');
-  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-  if (!wasOpen) item.classList.add('open');
-}
-
-// ── Smooth scroll ──
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  });
-});
-</script>
-<!-- ══════════ CONTACT MODAL ══════════ -->
-<div id="contact-modal" style="display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(8px)" onclick="if(event.target===this)closeContact()">
-  <div style="background:var(--bg);border-radius:24px;padding:36px;max-width:480px;width:92%;box-shadow:0 24px 80px rgba(0,0,0,.15);position:relative;animation:fadeUp .3s ease">
-    <button onclick="closeContact()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px;line-height:1">✕</button>
-    <h3 style="font-family:var(--font-display);font-size:24px;margin-bottom:6px">Contactez-nous</h3>
-    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px;line-height:1.5">Vous souhaitez en savoir plus sur le plan Enterprise ou avez une question ? Remplissez le formulaire et nous vous recontacterons sous 24h.</p>
-    <div style="margin-bottom:14px">
-      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Nom complet *</label>
-      <input id="ct-name" type="text" placeholder="Jean Dupont" style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none">
-    </div>
-    <div style="margin-bottom:14px">
-      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Email *</label>
-      <input id="ct-email" type="email" placeholder="vous@entreprise.com" style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none">
-    </div>
-    <div style="margin-bottom:14px">
-      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Entreprise</label>
-      <input id="ct-company" type="text" placeholder="Nom de votre entreprise" style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none">
-    </div>
-    <div style="margin-bottom:14px">
-      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Nombre d'employés</label>
-      <select id="ct-size" style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:14px;font-family:var(--font-body);color:var(--text);outline:none;cursor:pointer">
-        <option value="">Sélectionnez</option>
-        <option value="1-10">1 - 10</option>
-        <option value="11-50">11 - 50</option>
-        <option value="51-200">51 - 200</option>
-        <option value="200+">200+</option>
-      </select>
-    </div>
-    <div style="margin-bottom:20px">
-      <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Message</label>
-      <textarea id="ct-message" rows="3" placeholder="Décrivez votre besoin..." style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg-alt);font-size:15px;font-family:var(--font-body);color:var(--text);outline:none;resize:vertical"></textarea>
-    </div>
-    <div id="ct-error" style="color:#d94848;font-size:13px;margin-bottom:10px;display:none"></div>
-    <button id="ct-btn" onclick="submitContact()" style="width:100%;padding:14px;border:none;border-radius:12px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:opacity .2s">Envoyer</button>
+<!-- ══════ CONTACT MODAL ══════ -->
+<div class="modal-bg" id="contact-modal" onclick="if(event.target===this)closeContact()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeContact()">✕</button>
+    <h3>Contactez-nous</h3>
+    <p>Intéressé par le plan Enterprise ? Remplissez le formulaire, on vous recontacte sous 24h.</p>
+    <label>Nom complet *</label>
+    <input id="ct-name" type="text" placeholder="Jean Dupont">
+    <label>Email *</label>
+    <input id="ct-email" type="email" placeholder="vous@entreprise.com">
+    <label>Entreprise</label>
+    <input id="ct-company" type="text" placeholder="Nom de votre entreprise">
+    <label>Nombre d'employés</label>
+    <select id="ct-size"><option value="">Sélectionnez</option><option>1 - 10</option><option>11 - 50</option><option>51 - 200</option><option>200+</option></select>
+    <label>Message</label>
+    <textarea id="ct-message" placeholder="Décrivez votre besoin..."></textarea>
+    <div id="ct-error" class="error-msg"></div>
+    <button class="btn-submit" onclick="submitContact()">Envoyer</button>
   </div>
 </div>
 
-<div id="ct-toast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:3000;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:500;color:#fff;background:#3aab6d;box-shadow:0 8px 30px rgba(0,0,0,.2);font-family:var(--font-body)"></div>
+<div id="ct-toast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:300;padding:14px 24px;border-radius:100px;font-size:14px;font-weight:500;color:#fff;background:#3AAB6D;box-shadow:0 8px 30px rgba(0,0,0,.15);font-family:var(--font-body)"></div>
 
 <script>
-function openContact() {
-  document.getElementById('contact-modal').style.display = 'flex';
-}
-function closeContact() {
-  document.getElementById('contact-modal').style.display = 'none';
-}
-async function submitContact() {
-  const name = document.getElementById('ct-name').value.trim();
-  const email = document.getElementById('ct-email').value.trim();
-  const company = document.getElementById('ct-company').value.trim();
-  const size = document.getElementById('ct-size').value;
-  const message = document.getElementById('ct-message').value.trim();
-  const err = document.getElementById('ct-error');
-  const btn = document.getElementById('ct-btn');
+// Nav scroll
+window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',window.scrollY>50)});
 
-  err.style.display = 'none';
-  if (!name || !email) { err.textContent = 'Nom et email sont requis'; err.style.display = 'block'; return; }
-  if (!email.includes('@')) { err.textContent = 'Email invalide'; err.style.display = 'block'; return; }
+// Reveal on scroll
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
-  btn.disabled = true; btn.textContent = 'Envoi...';
-  try {
-    const res = await fetch('/api/contact', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name, email, company, size, message})
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erreur');
+// Contact modal
+function openContact(){document.getElementById('contact-modal').classList.add('open')}
+function closeContact(){document.getElementById('contact-modal').classList.remove('open')}
+async function submitContact(){
+  const n=document.getElementById('ct-name').value.trim();
+  const e=document.getElementById('ct-email').value.trim();
+  const c=document.getElementById('ct-company').value.trim();
+  const s=document.getElementById('ct-size').value;
+  const m=document.getElementById('ct-message').value.trim();
+  const err=document.getElementById('ct-error');
+  err.style.display='none';
+  if(!n||!e){err.textContent='Nom et email requis';err.style.display='block';return}
+  try{
+    const r=await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,email:e,company:c,size:s,message:m})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
     closeContact();
-    document.getElementById('ct-name').value = '';
-    document.getElementById('ct-email').value = '';
-    document.getElementById('ct-company').value = '';
-    document.getElementById('ct-size').value = '';
-    document.getElementById('ct-message').value = '';
-    const toast = document.getElementById('ct-toast');
-    toast.textContent = 'Message envoyé ! Nous vous recontacterons sous 24h.';
-    toast.style.display = 'block';
-    setTimeout(() => toast.style.display = 'none', 4000);
-  } catch(e) { err.textContent = e.message; err.style.display = 'block'; }
-  btn.disabled = false; btn.textContent = 'Envoyer';
+    ['ct-name','ct-email','ct-company','ct-message'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ct-size').value='';
+    const t=document.getElementById('ct-toast');t.textContent='Message envoyé ! Nous vous recontacterons sous 24h.';t.style.display='block';
+    setTimeout(()=>t.style.display='none',4000);
+  }catch(err2){err.textContent=err2.message;err.style.display='block'}
 }
 </script>
-
 </body>
 </html>
