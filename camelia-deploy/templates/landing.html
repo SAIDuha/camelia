@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <!-- Camélia - Développé par EL-JAMII SAID, Strasbourg, France -->
-
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -15,6 +14,7 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{font-family:var(--font-body);color:var(--text);background:var(--bg);overflow-x:hidden}
 ::selection{background:var(--rose-light);color:var(--rose-dark)}
 
+/* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
@@ -28,6 +28,7 @@ body{font-family:var(--font-body);color:var(--text);background:var(--bg);overflo
 .reveal.visible{opacity:1;transform:translateY(0)}
 .reveal-delay-1{transition-delay:.15s}.reveal-delay-2{transition-delay:.3s}.reveal-delay-3{transition-delay:.45s}.reveal-delay-4{transition-delay:.6s}
 
+/* ── NAV ── */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;transition:all .4s;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
@@ -43,6 +44,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .btn-nav-primary{background:var(--rose);color:#fff !important;border:1.5px solid var(--rose)}
 .btn-nav-primary:hover{background:var(--rose-dark);border-color:var(--rose-dark);transform:translateY(-1px)}
 
+/* ── HERO ── */
 .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:120px 40px 80px;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;top:-30%;right:-20%;width:700px;height:700px;border-radius:50%;background:var(--rose-glow);filter:blur(100px);pointer-events:none}
 .hero::after{content:'';position:absolute;bottom:-20%;left:-10%;width:500px;height:500px;border-radius:50%;background:rgba(200,150,90,.06);filter:blur(80px);pointer-events:none}
@@ -62,6 +64,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .btn-ghost{color:var(--text-sec);background:none;border:1.5px solid var(--border)}
 .btn-ghost:hover{border-color:var(--rose);color:var(--rose)}
 
+/* ── MOCKUP IN HERO ── */
 .hero-mockup{flex:1.2;animation:fadeUp 1s ease .5s both}
 .hero-mockup-inner{position:relative}
 .mockup-browser{background:var(--card);border-radius:16px;box-shadow:0 40px 120px rgba(0,0,0,.08),0 0 0 1px var(--border);overflow:hidden}
@@ -86,12 +89,14 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .mockup-emp span{font-size:11px;color:var(--text)}
 .mockup-emp .time{margin-left:auto;font-size:10px;color:var(--muted)}
 
+/* ── SOCIAL PROOF ── */
 .social-proof{padding:40px 40px;background:var(--cream);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .social-inner{max-width:900px;margin:0 auto;text-align:center}
 .social-proof p{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:16px;letter-spacing:.5px}
 .social-logos{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;align-items:center;opacity:.4}
 .social-logos span{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text)}
 
+/* ── SECTION ── */
 .section{padding:100px 40px}
 .section-header{text-align:center;max-width:640px;margin:0 auto 60px}
 .section-label{font-size:12px;font-weight:600;color:var(--rose);text-transform:uppercase;letter-spacing:3px;margin-bottom:14px}
@@ -99,6 +104,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .section-title em{font-style:italic;color:var(--rose)}
 .section-sub{font-size:17px;color:var(--text-sec);margin-top:16px;line-height:1.65;font-weight:400}
 
+/* ── FEATURES ── */
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto}
 .feature-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 28px;transition:all .4s;position:relative;overflow:hidden}
 .feature-card:hover{transform:translateY(-6px);box-shadow:0 20px 60px var(--rose-glow);border-color:var(--rose-light)}
@@ -108,6 +114,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .feature-card h3{font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:8px;color:var(--text)}
 .feature-card p{font-size:14px;color:var(--text-sec);line-height:1.6}
 
+/* ── HOW IT WORKS ── */
 .steps{max-width:800px;margin:0 auto;position:relative}
 .steps::before{content:'';position:absolute;left:24px;top:48px;bottom:48px;width:2px;background:linear-gradient(180deg,var(--rose),var(--gold))}
 .step{display:flex;gap:28px;margin-bottom:48px;position:relative}
@@ -115,6 +122,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .step-content h3{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:6px}
 .step-content p{font-size:15px;color:var(--text-sec);line-height:1.6}
 
+/* ── PRICING ── */
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto}
 .pricing-card{background:var(--card);border:1.5px solid var(--border);border-radius:24px;padding:36px 28px;position:relative;transition:all .4s}
 .pricing-card.featured{border-color:var(--rose);box-shadow:0 20px 60px var(--rose-glow)}
@@ -136,6 +144,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .btn-pricing.outline{background:none;color:var(--text);border:1.5px solid var(--border)}
 .btn-pricing.outline:hover{border-color:var(--rose);color:var(--rose)}
 
+/* ── TESTIMONIALS ── */
 .testimonials{display:flex;gap:20px;max-width:1000px;margin:0 auto}
 .testimonial{flex:1;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px}
 .testimonial-stars{color:var(--gold);font-size:14px;letter-spacing:2px;margin-bottom:12px}
@@ -145,6 +154,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .testimonial-name{font-size:13px;font-weight:600;color:var(--text)}
 .testimonial-role{font-size:11px;color:var(--muted)}
 
+/* ── FAQ ── */
 .faq-list{max-width:700px;margin:0 auto}
 .faq-item{border-bottom:1px solid var(--border);padding:20px 0}
 .faq-q{display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:16px;font-weight:600;color:var(--text);font-family:var(--font-body)}
@@ -155,6 +165,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .faq-item.open .faq-a{max-height:200px;padding-top:12px}
 .faq-a p{font-size:14px;color:var(--text-sec);line-height:1.65}
 
+/* ── CTA ── */
 .cta-section{background:var(--text);padding:80px 40px;text-align:center;position:relative;overflow:hidden}
 .cta-section::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:600px;border-radius:50%;background:rgba(181,87,122,.1);filter:blur(100px)}
 .cta-section h2{font-family:var(--font-display);font-size:clamp(28px,4vw,42px);font-weight:700;color:var(--bg);margin-bottom:14px;position:relative}
@@ -163,6 +174,7 @@ nav.scrolled{background:rgba(250,250,248,.85);box-shadow:0 1px 0 var(--border)}
 .btn-cta{background:var(--rose);color:#fff;border:none;padding:18px 44px;border-radius:100px;font-size:16px;font-weight:600;position:relative}
 .btn-cta:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 12px 40px rgba(181,87,122,.3)}
 
+/* ── FOOTER ── */
 footer{padding:48px 40px 32px;border-top:1px solid var(--border)}
 .footer-inner{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
 .footer-logo{display:flex;align-items:center;gap:8px}
@@ -172,6 +184,7 @@ footer{padding:48px 40px 32px;border-top:1px solid var(--border)}
 .footer-links a:hover{color:var(--rose)}
 .footer-copy{font-size:12px;color:var(--muted);margin-top:20px;text-align:center}
 
+/* ── CONTACT MODAL ── */
 .modal-bg{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(26,24,20,.5);backdrop-filter:blur(12px)}
 .modal-bg.open{display:flex}
 .modal{background:var(--card);border-radius:24px;padding:40px;max-width:480px;width:92%;box-shadow:0 40px 120px rgba(0,0,0,.15);position:relative;animation:scaleIn .3s ease}
@@ -187,6 +200,7 @@ footer{padding:48px 40px 32px;border-top:1px solid var(--border)}
 .modal .btn-submit:hover{background:var(--rose-dark)}
 .modal .error-msg{color:#D94848;font-size:13px;margin-bottom:10px;display:none}
 
+/* ── RESPONSIVE ── */
 @media(max-width:768px){
   nav{padding:14px 20px}
   .nav-links a:not(.btn-nav){display:none}
@@ -473,12 +487,14 @@ footer{padding:48px 40px 32px;border-top:1px solid var(--border)}
 <div id="ct-toast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:300;padding:14px 24px;border-radius:100px;font-size:14px;font-weight:500;color:#fff;background:#3AAB6D;box-shadow:0 8px 30px rgba(0,0,0,.15);font-family:var(--font-body)"></div>
 
 <script>
-
+// Nav scroll
 window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',window.scrollY>50)});
 
+// Reveal on scroll
 const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
+// Contact modal
 function openContact(){document.getElementById('contact-modal').classList.add('open')}
 function closeContact(){document.getElementById('contact-modal').classList.remove('open')}
 async function submitContact(){
